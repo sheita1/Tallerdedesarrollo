@@ -1,0 +1,91 @@
+import { useEffect, useRef, useState } from 'react';
+import { TabulatorFull as Tabulator } from 'tabulator-tables';
+import "tabulator-tables/dist/css/tabulator.min.css";
+import '@styles/table.css';
+
+function useTable({ data, columns, filter, dataToFilter, initialSortName, onSelectionChange }) {
+  const tableRef = useRef(null);
+  const [table, setTable] = useState(null);
+  const [isTableBuilt, setIsTableBuilt] = useState(false);
+
+  useEffect(() => {
+    if (tableRef.current) {
+      const updatedColumns = [
+        {
+          formatter: "rowSelection",
+          titleFormatter: false,
+          hozAlign: "center",
+          headerSort: false,
+          cellClick: (e, cell) => {
+            cell.getRow().toggleSelect();
+          }
+        },
+        ...columns
+      ];
+
+      const tabulatorTable = new Tabulator(tableRef.current, {
+        data: [],
+        columns: updatedColumns,
+        layout: "fitColumns",
+        responsiveLayout: "collapse",
+        pagination: true,
+        paginationSize: 6,
+        selectableRows: 1,
+        rowHeight: 46,
+        langs: {
+          default: {
+            pagination: {
+              first: "Primero",
+              prev: "Anterior",
+              next: "Siguiente",
+              last: "Último"
+            }
+          }
+        },
+        initialSort: [
+          { column: initialSortName, dir: "asc" }
+        ]
+      });
+
+      tabulatorTable.on("rowSelectionChanged", (selectedData) => {
+        if (onSelectionChange) {
+          onSelectionChange(selectedData);
+        }
+      });
+
+      tabulatorTable.on("tableBuilt", () => {
+        setIsTableBuilt(true);
+      });
+
+      setTable(tabulatorTable);
+
+      return () => {
+        tabulatorTable.destroy();
+        setIsTableBuilt(false);
+        setTable(null);
+      };
+    }
+  }, []);
+
+  useEffect(() => {
+    if (table && isTableBuilt) {
+      const safeData = Array.isArray(data) ? data : [];
+      table.replaceData(safeData);
+    }
+  }, [data, table, isTableBuilt]);
+
+  useEffect(() => {
+    if (table && isTableBuilt) {
+      if (typeof dataToFilter === "string" && typeof filter === "string") {
+        table.setFilter(dataToFilter, "like", filter);
+      } else {
+        table.clearFilter();
+      }
+      table.redraw();
+    }
+  }, [filter, table, dataToFilter, isTableBuilt]);
+
+  return { tableRef };
+}
+
+export default useTable;

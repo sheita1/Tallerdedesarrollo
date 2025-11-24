@@ -1,0 +1,158 @@
+@import url('./theme.css');
+
+.form {
+  background-color: var(--color-acento);
+  padding: 6vh 4vh;
+  display: flex;
+  flex-direction: column;
+  border-radius: 20px;
+  align-items: center;
+  box-shadow: 0 8px 20px var(--color-sombra);
+  max-width: 420px;
+  margin: auto;
+}
+
+.form h1 {
+  color: var(--color-primario);
+  font-size: 30px;
+  font-weight: bold;
+  margin-bottom: 4vh;
+}
+
+.container_inputs {
+  position: relative;
+  margin-bottom: 5px;
+  width: 100%;
+}
+
+label {
+  color: var(--color-texto);
+  font-weight: bold;
+  margin-bottom: 0.7vh;
+}
+
+input, select, textarea {
+  border: 2px solid var(--color-borde);
+  border-radius: 12px;
+  padding: 10px;
+  font-size: 16px;
+  color: var(--color-texto);
+  background-color: var(--color-acento);
+  box-shadow: 0 1px 3px var(--color-sombra);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+input::placeholder,
+select::placeholder,
+textarea::placeholder {
+  color: rgba(0, 0, 0, 0.3);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  background-color: rgba(14, 89, 215, 0.1);
+}
+
+button {
+  background-color: var(--color-primario);
+  color: var(--color-acento);
+  font-weight: bold;
+  font-size: 16px;
+  border: none;
+  border-radius: 12px;
+  padding: 1.2vh 0;
+  width: 100%;
+  margin-top: 10px;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: var(--color-hover);
+}
+
+.footerContent {
+  margin-top: 10px;
+  font-size: 14px;
+  color: var(--color-texto);
+}
+
+.error-message {
+  visibility: hidden;
+  height: 20px;
+  color: red;
+  font-size: 13px;
+  padding-left: 5px;
+}
+
+.error-message.visible {
+  visibility: visible;
+}
+
+.toggle-password-icon {
+  position: absolute;
+  right: 15px;
+  top: 44%;
+  transform: translateY(-50%);
+  width: 25px;
+  height: 25px;
+  cursor: pointer;
+}
+
+.toggle-password-icon img {
+  width: 25px;
+  height: 25px;
+  margin-top: 4px;
+}
+
+.form-logo-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 3vh;
+}
+
+.form-logo {
+  width: 120px;
+  height: auto;
+  object-fit: contain;
+  border-radius: 12px;
+  box-shadow: 0 6px 16px var(--color-sombra);
+  background-color: white;
+  transition: transform 0.3s ease;
+}
+
+.form-logo:hover {
+  transform: scale(1.04);
+}
+
+@media (max-width: 480px) {
+  .form {
+    width: 90%;
+    padding-left: 2px;
+    padding-right: 2px;
+  }
+
+  .form h1 {
+    font-size: 24px;
+    margin-bottom: 2vh;
+  }
+
+  .form input,
+  .form select {
+    font-size: 14px;
+  }
+
+  .form button {
+    font-size: 16px;
+  }
+
+  .footerContent {
+    font-size: 12px;
+  }
+
+  .toggle-password-icon {
+    width: 20px;
+    height: 20px;
+  }
+}

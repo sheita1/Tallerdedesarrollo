@@ -1,0 +1,43 @@
+/* Fondo oscuro detrás del popup */
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5); /* semitransparente */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+/* Contenedor del popup */
+.popup-content {
+  background: #fff;
+  padding: 1.5rem;          /* un poco más compacto */
+  border-radius: 8px;
+  max-width: 500px;         /* reducido para que no se vea gigante */
+  width: 100%;
+  max-height: 80vh;         /* no ocupa toda la pantalla */
+  overflow-y: auto;         /* scroll interno si es muy largo */
+  box-shadow: 0 0 20px rgba(0,0,0,0.3);
+  position: relative;       /* necesario para ubicar el botón de cerrar */
+}
+
+/* Botón de cerrar */
+.close-button {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.8rem;
+  font-size: 1.5rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #333;              /* texto oscuro para que siempre se vea */
+  transition: color 0.2s ease;
+}
+
+.close-button:hover {
+  color: #000;              /* más oscuro al pasar el mouse */
+}

@@ -1,0 +1,21 @@
+@import url("./theme.css");
+
+.table-container .tabulator .tabulator-col {
+  background-color: var(--color-primario);
+  color: var(--color-acento);
+  font-weight: bold;
+}
+
+.tabulator .tabulator-footer .tabulator-page {
+  background-color: var(--color-acento);
+  color: var(--color-texto);
+  border: 1px solid var(--color-primario);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.tabulator .tabulator-footer .tabulator-page.active {
+  color: var(--color-secundario);
+  font-weight: bold;
+}

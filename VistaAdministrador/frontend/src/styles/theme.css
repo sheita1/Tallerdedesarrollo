@@ -1,0 +1,81 @@
+/* ================================
+   🌄 Tema Institucional Turístico
+   ================================ */
+
+/* 🎨 Paleta de colores */
+:root {
+  --color-primario: #0e59d7;       /* Azul institucional */
+  --color-secundario: #eb5b26;     /* Naranja turístico */
+  --color-fondo: #f5f5f5;          /* Fondo neutro */
+  --color-texto: #333333;          /* Texto principal */
+  --color-acento: #ffffff;         /* Blanco para contraste */
+  --color-hover: #0846b5;          /* Azul oscuro para hover */
+  --color-borde: #dcdcdc;          /* Bordes suaves */
+  --color-sombra: rgba(0, 0, 0, 0.1);
+}
+
+/* 🖋️ Tipografía base */
+body {
+  font-family: 'Lato', sans-serif;
+  background-color: var(--color-fondo);
+  color: var(--color-texto);
+  margin: 0;
+  padding: 0;
+}
+
+/* 🖱️ Scroll personalizado */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background-color: var(--color-primario);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-track {
+  background-color: var(--color-secundario);
+}
+
+/* 🧱 Utilidades */
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.shadow-card {
+  box-shadow: 0 2px 8px var(--color-sombra);
+  border-radius: 8px;
+  background-color: var(--color-acento);
+  padding: 20px;
+}
+
+/* ✨ Botones base */
+button {
+  background-color: var(--color-primario);
+  color: var(--color-acento);
+  font-weight: bold;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: var(--color-hover);
+}
+
+/* 📦 Inputs y selects */
+input, select, textarea {
+  border: 1px solid var(--color-borde);
+  border-radius: 6px;
+  padding: 10px;
+  font-family: 'Lato', sans-serif;
+  box-shadow: 0 1px 3px var(--color-sombra);
+  width: 100%;
+  box-sizing: border-box;
+}
