@@ -11,12 +11,15 @@ import DeleteIcon from '../assets/deleteIcon.svg';
 import UpdateIcon from '../assets/updateIcon.svg';
 import UpdateIconDisable from '../assets/updateIconDisabled.svg';
 import DeleteIconDisable from '../assets/deleteIconDisabled.svg';
+import QRInstitucional from '@components/QRInstitucional';
+import logoMunicipal from '../assets/logo.png';
 import '@styles/patrimonios.css';
 
 const Patrimonios = () => {
   const { patrimonios, fetchPatrimonios, setPatrimonios } = usePatrimonios();
   const [filterNombre, setFilterNombre] = useState('');
   const [showRegisterModal, setShowRegisterModal] = useState(false);
+  const [mostrarQR, setMostrarQR] = useState(false);
   const navigate = useNavigate();
 
   const {
@@ -36,6 +39,7 @@ const Patrimonios = () => {
 
   const handleSelectionChange = useCallback((selectedItems) => {
     setDataPatrimonio(selectedItems);
+    setMostrarQR(false); // Oculta el QR al cambiar selección
   }, [setDataPatrimonio]);
 
   const columns = [
@@ -85,16 +89,38 @@ const Patrimonios = () => {
           onSelectionChange={handleSelectionChange}
         />
 
+        {/* Botones cuando hay un patrimonio seleccionado */}
         {dataPatrimonio.length === 1 && (
-  <div className="galeria-button-container">
-    <button
-      className="gallery-button"
-      onClick={() => navigate(`/galeria/${dataPatrimonio[0].id}`)}
-    >
-      📷 Ver galería del patrimonio #{dataPatrimonio[0].id}
-    </button>
-  </div>
-)}
+          <div
+            className="galeria-button-container"
+            style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}
+          >
+            <button
+              className="gallery-button"
+              onClick={() => navigate(`/galeria/${dataPatrimonio[0].id}`)}
+            >
+              📷 Ver galería del patrimonio #{dataPatrimonio[0].id}
+            </button>
+
+            <button
+              className="gallery-button"
+              onClick={() => setMostrarQR(!mostrarQR)}
+            >
+              📄 Descargar QR del patrimonio #{dataPatrimonio[0].id}
+            </button>
+          </div>
+        )}
+
+        {/*QR institucional desplegable */}
+        {mostrarQR && dataPatrimonio.length === 1 && (
+          <div style={{ marginTop: "20px" }}>
+            <QRInstitucional
+              id={dataPatrimonio[0].id}
+              nombre={dataPatrimonio[0].nombre}
+              logo={logoMunicipal}
+            />
+          </div>
+        )}
 
       </div>
 

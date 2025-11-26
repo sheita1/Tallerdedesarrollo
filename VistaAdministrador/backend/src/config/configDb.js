@@ -1,9 +1,11 @@
 "use strict";
 import { DataSource } from "typeorm";
 import { DATABASE, DB_USERNAME, HOST, PASSWORD } from "./configEnv.js";
+
 import UserSchema from "../entity/user.entity.js";
 import PatrimonioSchema from "../entity/patrimonio.entity.js";
-import PatrimonioImagen from "../entity/PatrimonioImagen.js"; 
+import PatrimonioImagen from "../entity/PatrimonioImagen.js";
+import QrScanSchema from "../entity/qrScan.entity.js";
 
 export const AppDataSource = new DataSource({
   type: "postgres",
@@ -12,7 +14,12 @@ export const AppDataSource = new DataSource({
   username: DB_USERNAME,
   password: PASSWORD,
   database: DATABASE,
-  entities: [UserSchema, PatrimonioSchema, PatrimonioImagen], 
+  entities: [
+    UserSchema,
+    PatrimonioSchema,
+    PatrimonioImagen,
+    QrScanSchema, 
+  ],
   synchronize: true,
   logging: false,
 });

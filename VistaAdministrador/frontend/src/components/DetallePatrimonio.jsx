@@ -2,6 +2,10 @@ import { useEffect, useState } from "react";
 import GaleriaImagenes from "./GaleriaImagenes";
 import ModalSubirImagenes from "./ModalSubirImagenes";
 
+
+import QrConLogo from "./QrConLogo";
+import logoMunicipal from "../assets/logo.png";
+
 function DetallePatrimonio({ patrimonioId }) {
   const [patrimonio, setPatrimonio] = useState(null);
   const [mostrarModal, setMostrarModal] = useState(false);
@@ -29,7 +33,7 @@ function DetallePatrimonio({ patrimonioId }) {
   if (!patrimonio) return <p>Cargando patrimonio...</p>;
 
   return (
-    <div className="detalle-patrimonio">
+    <div className="detalle-patrimonio" style={{ padding: "1rem" }}>
       <h2>{patrimonio.nombre}</h2>
       <p><strong>Ubicación:</strong> {patrimonio.ubicacion}</p>
       <p><strong>Tipo:</strong> {patrimonio.tipo}</p>
@@ -37,7 +41,7 @@ function DetallePatrimonio({ patrimonioId }) {
       <p><strong>Descripción:</strong> {patrimonio.descripcion}</p>
 
       {patrimonio.imagen && (
-        <div>
+        <div style={{ marginTop: "1rem" }}>
           <h3>🖼️ Imagen principal</h3>
           <img
             src={`/uploads/${patrimonio.imagen}`}
@@ -47,7 +51,16 @@ function DetallePatrimonio({ patrimonioId }) {
         </div>
       )}
 
-      <hr />
+      {/* ✅ QR con logo y botón de descarga */}
+      <div style={{ marginTop: "2rem" }}>
+        <h3>📱 QR para imprimir</h3>
+        <QrConLogo
+          url={`http://localhost:8080/patrimonio/${patrimonioId}`}
+          logo={logoMunicipal}
+        />
+      </div>
+
+      <hr style={{ margin: "2rem 0" }} />
 
       <GaleriaImagenes patrimonioId={patrimonioId} key={recargarGaleria} />
 

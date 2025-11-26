@@ -3,7 +3,20 @@ import { useParams } from "react-router-dom";
 import Navigation from "../components/Navigation";
 import Footer from "../components/Footer";
 
-// ⭐ Componente de Rating
+// ✅ Registrar escaneo QR
+const registrarEscaneo = async (patrimonioId) => {
+  try {
+    await fetch("http://localhost:3000/api/qr/scan", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ patrimonioId }),
+    });
+  } catch (error) {
+    console.error("Error registrando escaneo QR:", error);
+  }
+};
+
+// Componente de Rating
 const Rating = ({ onRate }: { onRate: (value: number) => void }) => {
   const [hover, setHover] = useState(0);
   const [rating, setRating] = useState(0);
@@ -37,7 +50,7 @@ const Rating = ({ onRate }: { onRate: (value: number) => void }) => {
   );
 };
 
-// 💬 Componente de Comentarios
+// Componente de Comentarios
 const Comentarios = () => {
   const [comentarios, setComentarios] = useState<string[]>([]);
   const [nuevoComentario, setNuevoComentario] = useState("");
@@ -53,7 +66,6 @@ const Comentarios = () => {
     <div className="mt-8">
       <h2 className="text-2xl font-semibold text-[#2A624C] mb-4">Comentarios</h2>
 
-      {/* Formulario de comentario */}
       <form onSubmit={handleSubmit} className="flex flex-col space-y-4 mb-6">
         <textarea
           value={nuevoComentario}
@@ -69,7 +81,6 @@ const Comentarios = () => {
         </button>
       </form>
 
-      {/* Lista de comentarios */}
       <div className="space-y-4">
         {comentarios.length === 0 ? (
           <p className="text-gray-500">Aún no hay comentarios. Sé el primero en opinar.</p>
@@ -93,8 +104,12 @@ const DetallePatrimonio = () => {
   const [patrimonio, setPatrimonio] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
+  // ✅ Cargar patrimonio + registrar escaneo QR
   useEffect(() => {
     document.title = "Detalle de Patrimonio – TourCraft";
+
+    // ✅ Registrar escaneo QR al entrar
+    registrarEscaneo(id);
 
     fetch(`http://localhost:3000/api/patrimonios/detalle?id=${id}`)
       .then((res) => res.json())
@@ -115,11 +130,9 @@ const DetallePatrimonio = () => {
   if (loading) return <p className="text-center mt-20">Cargando patrimonio...</p>;
   if (!patrimonio) return <p className="text-center mt-20">Patrimonio no encontrado.</p>;
 
-  // Función para manejar la calificación
   const handleRate = (value: number) => {
     console.log(`Patrimonio ${patrimonio.nombre} calificado con ${value} estrellas`);
     alert(`¡Gracias! Has calificado este patrimonio con ${value} estrellas.`);
-    // Aquí podrías enviar la calificación al backend con fetch/axios
   };
 
   return (
@@ -129,7 +142,6 @@ const DetallePatrimonio = () => {
       <main className="container mx-auto px-4 pt-28 pb-16">
         <h1 className="text-4xl font-bold text-[#2A624C] mb-6">{patrimonio.nombre}</h1>
 
-        {/* Imagen destacada */}
         {patrimonio.galeria && patrimonio.galeria.length > 0 && (
           <img
             src={`http://localhost:3000/${patrimonio.galeria[0]}`}
@@ -148,14 +160,11 @@ const DetallePatrimonio = () => {
           <strong>Descripción:</strong> {patrimonio.descripcion}
         </p>
 
-        {/* ⭐ Rating */}
         <h2 className="text-2xl font-semibold text-[#2A624C] mb-2">Califica este patrimonio</h2>
         <Rating onRate={handleRate} />
 
-        {/* 💬 Comentarios */}
         <Comentarios />
 
-        {/* Galería completa */}
         {patrimonio.galeria && patrimonio.galeria.length > 0 && (
           <div className="mt-12">
             <h2 className="text-2xl font-semibold text-[#2A624C] mb-4">Galería</h2>

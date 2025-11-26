@@ -2,12 +2,28 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import GaleriaPatrimonio from "../pages/GaleriaPatrimonio";
 
+// ✅ Función para registrar escaneo QR
+const registrarEscaneo = async (patrimonioId) => {
+  try {
+    await fetch("http://localhost:3000/api/qr/scan", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ patrimonioId }),
+    });
+  } catch (error) {
+    console.error("Error registrando escaneo QR:", error);
+  }
+};
+
 function DetallePatrimonio() {
-  const { id } = useParams(); // ✅ ID dinámico desde la URL
+  const { id } = useParams(); 
   const [patrimonio, setPatrimonio] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    
+    registrarEscaneo(id);
+
     fetch(`http://localhost:3000/api/patrimonios/detail/?id=${id}`)
       .then((res) => res.json())
       .then((data) => {

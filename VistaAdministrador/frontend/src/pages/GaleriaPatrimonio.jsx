@@ -22,9 +22,9 @@ function GaleriaPatrimonio({ patrimonioId }) {
       });
   }, [patrimonioId]);
 
-  // Cargar nombre del patrimonio
+  // ✅ Cargar nombre del patrimonio (CORREGIDO)
   useEffect(() => {
-    fetch(`http://localhost:3000/api/patrimonios/${patrimonioId}`)
+    fetch(`http://localhost:3000/api/patrimonios/detail/?id=${patrimonioId}`)
       .then((res) => res.json())
       .then((data) => {
         setNombrePatrimonio(data.nombre || `#${patrimonioId}`);
