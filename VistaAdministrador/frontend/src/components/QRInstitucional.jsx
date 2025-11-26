@@ -1,9 +1,11 @@
 import { QRCodeCanvas } from "qrcode.react";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
+import { TOURISTA_BASE_URL } from "../config/touristaBaseUrl";
 
 function QRInstitucional({ id, nombre, logo }) {
-  const url = `http://localhost:8080/patrimonio/${id}`;
+  
+  const url = `${TOURISTA_BASE_URL}/patrimonio/${id}`;
 
   const descargarPDF = async () => {
     const elemento = document.getElementById(`qr-institucional-${id}`);

@@ -2,11 +2,14 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import Navigation from "../components/Navigation";
 import Footer from "../components/Footer";
+import { getApiBaseUrl } from "../utils/apiBase";
+
+const api = getApiBaseUrl();
 
 // ✅ Registrar escaneo QR
 const registrarEscaneo = async (patrimonioId) => {
   try {
-    await fetch("http://localhost:3000/api/qr/scan", {
+    await fetch(`${api}/qr/scan`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ patrimonioId }),
@@ -16,8 +19,7 @@ const registrarEscaneo = async (patrimonioId) => {
   }
 };
 
-// Componente de Rating
-const Rating = ({ onRate }: { onRate: (value: number) => void }) => {
+const Rating = ({ onRate }) => {
   const [hover, setHover] = useState(0);
   const [rating, setRating] = useState(0);
 
@@ -50,12 +52,11 @@ const Rating = ({ onRate }: { onRate: (value: number) => void }) => {
   );
 };
 
-// Componente de Comentarios
 const Comentarios = () => {
-  const [comentarios, setComentarios] = useState<string[]>([]);
+  const [comentarios, setComentarios] = useState([]);
   const [nuevoComentario, setNuevoComentario] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     if (nuevoComentario.trim() === "") return;
     setComentarios([...comentarios, nuevoComentario]);
@@ -101,17 +102,15 @@ const Comentarios = () => {
 
 const DetallePatrimonio = () => {
   const { id } = useParams();
-  const [patrimonio, setPatrimonio] = useState<any>(null);
+  const [patrimonio, setPatrimonio] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // ✅ Cargar patrimonio + registrar escaneo QR
   useEffect(() => {
     document.title = "Detalle de Patrimonio – TourCraft";
 
-    // ✅ Registrar escaneo QR al entrar
     registrarEscaneo(id);
 
-    fetch(`http://localhost:3000/api/patrimonios/detalle?id=${id}`)
+    fetch(`${api}/patrimonios/detalle?id=${id}`)
       .then((res) => res.json())
       .then((json) => {
         if (json.data) {
@@ -130,11 +129,6 @@ const DetallePatrimonio = () => {
   if (loading) return <p className="text-center mt-20">Cargando patrimonio...</p>;
   if (!patrimonio) return <p className="text-center mt-20">Patrimonio no encontrado.</p>;
 
-  const handleRate = (value: number) => {
-    console.log(`Patrimonio ${patrimonio.nombre} calificado con ${value} estrellas`);
-    alert(`¡Gracias! Has calificado este patrimonio con ${value} estrellas.`);
-  };
-
   return (
     <div className="min-h-screen overflow-hidden">
       <Navigation />
@@ -142,9 +136,10 @@ const DetallePatrimonio = () => {
       <main className="container mx-auto px-4 pt-28 pb-16">
         <h1 className="text-4xl font-bold text-[#2A624C] mb-6">{patrimonio.nombre}</h1>
 
+        {/* ✅ Imagen principal */}
         {patrimonio.galeria && patrimonio.galeria.length > 0 && (
           <img
-            src={`http://localhost:3000/${patrimonio.galeria[0]}`}
+            src={`/${patrimonio.galeria[0]}`}
             alt={patrimonio.nombre}
             className="w-full max-h-[500px] object-cover rounded shadow-md mb-8"
           />
@@ -160,19 +155,17 @@ const DetallePatrimonio = () => {
           <strong>Descripción:</strong> {patrimonio.descripcion}
         </p>
 
-        <h2 className="text-2xl font-semibold text-[#2A624C] mb-2">Califica este patrimonio</h2>
-        <Rating onRate={handleRate} />
-
         <Comentarios />
 
+        {/* ✅ Galería */}
         {patrimonio.galeria && patrimonio.galeria.length > 0 && (
           <div className="mt-12">
             <h2 className="text-2xl font-semibold text-[#2A624C] mb-4">Galería</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {patrimonio.galeria.map((ruta: string, index: number) => (
+              {patrimonio.galeria.map((ruta, index) => (
                 <img
                   key={index}
-                  src={`http://localhost:3000/${ruta}`}
+                  src={`/${ruta}`}
                   alt={`Imagen ${index + 1}`}
                   className="w-full h-64 md:h-80 lg:h-96 object-contain rounded shadow-sm"
                 />

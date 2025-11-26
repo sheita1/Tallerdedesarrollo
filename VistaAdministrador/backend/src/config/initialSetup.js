@@ -1,6 +1,6 @@
 "use strict";
 import User from "../entity/user.entity.js";
-import Patrimonio from "../entity/patrimonio.entity.js"; // ✅ nuevo
+import Patrimonio from "../entity/patrimonio.entity.js";
 import { AppDataSource } from "./configDb.js";
 import { encryptPassword } from "../helpers/bcrypt.helper.js";
 
@@ -12,7 +12,6 @@ async function createUsers() {
     if (count > 0) return;
 
     await Promise.all([
-      // ✅ Administrador corregido
       userRepository.save(
         userRepository.create({
           nombreCompleto: "Sebastian Ignacio Muñoz Echeverrigaray",
@@ -20,7 +19,7 @@ async function createUsers() {
           email: "administrador2024@gmail.cl",
           password: await encryptPassword("admin1234"),
           rol: "administrador",
-        }),
+        })
       ),
       userRepository.save(
         userRepository.create({
@@ -38,7 +37,7 @@ async function createUsers() {
           email: "usuario2.2024@gmail.cl",
           password: await encryptPassword("user1234"),
           rol: "usuario",
-        }),
+        })
       ),
       userRepository.save(
         userRepository.create({
@@ -47,7 +46,7 @@ async function createUsers() {
           email: "usuario3.2024@gmail.cl",
           password: await encryptPassword("user1234"),
           rol: "usuario",
-        }),
+        })
       ),
       userRepository.save(
         userRepository.create({
@@ -56,7 +55,7 @@ async function createUsers() {
           email: "usuario4.2024@gmail.cl",
           password: await encryptPassword("user1234"),
           rol: "usuario",
-        }),
+        })
       ),
       userRepository.save(
         userRepository.create({
@@ -65,7 +64,7 @@ async function createUsers() {
           email: "usuario5.2024@gmail.cl",
           password: await encryptPassword("user1234"),
           rol: "usuario",
-        }),
+        })
       ),
       userRepository.save(
         userRepository.create({
@@ -74,7 +73,7 @@ async function createUsers() {
           email: "usuario6.2024@gmail.cl",
           password: await encryptPassword("user1234"),
           rol: "usuario",
-        }),
+        })
       ),
     ]);
     console.log("* => Usuarios creados exitosamente");
@@ -85,6 +84,12 @@ async function createUsers() {
 
 async function createPatrimonios() {
   try {
+    // ⚠️ Solo insertar patrimonios iniciales si NO estamos en producción
+    if (process.env.NODE_ENV === "production") {
+      console.log("* => Entorno producción: no se insertan patrimonios iniciales");
+      return;
+    }
+
     const patrimonioRepository = AppDataSource.getRepository(Patrimonio);
 
     const count = await patrimonioRepository.count();
@@ -116,7 +121,7 @@ async function createPatrimonios() {
       await patrimonioRepository.save(patrimonio);
     }
 
-    console.log("* => Patrimonios creados exitosamente");
+    console.log("* => Patrimonios de prueba creados exitosamente (solo desarrollo)");
   } catch (error) {
     console.error("Error al crear patrimonios:", error);
   }

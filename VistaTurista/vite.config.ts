@@ -1,15 +1,32 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
-// https://vitejs.dev/config/
+
 export default defineConfig(({ mode }) => ({
   server: {
-    host: "::",
-    port: 8080,
+    host: true,        // ✅ permite acceso desde celular
+    port: 8080,        // ✅ puerto del turista
+    proxy: {
+      "/api": {
+        target: "http://localhost:3000", // ✅ backend real
+        changeOrigin: true,
+        secure: false,
+      },
+      "/patrimonios": {
+        target: "http://localhost:3000", // ✅ imágenes de patrimonios
+        changeOrigin: true,
+        secure: false,
+      },
+      "/uploads": {
+        target: "http://localhost:3000", // ✅ imágenes generales
+        changeOrigin: true,
+        secure: false,
+      },
+    },
   },
   plugins: [
     react(),
-  ].filter(Boolean),
+  ],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

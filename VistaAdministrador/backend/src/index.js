@@ -22,11 +22,16 @@ async function setupServer() {
 
     app.disable("x-powered-by");
 
-    // ✅ Configuración CORS para panel (5173) y turista (8080)
+    // ✅ Configuración CORS para panel y turista (local + producción)
     app.use(
       cors({
         credentials: true,
-        origin: ["http://localhost:5173", "http://localhost:8080"],
+        origin: [
+          "http://localhost:5173",
+          "http://localhost:8080",
+          "http://146.83.198.35:1555", // Apache HTTP
+          "https://146.83.198.35:1556", // Apache HTTPS
+        ],
       })
     );
 
@@ -53,15 +58,20 @@ async function setupServer() {
     passportJwtSetup();
 
     // ✅ Servir imágenes estáticas
-    app.use("/patrimonios", express.static(path.join(process.cwd(), "uploads/patrimonios")));
+    app.use(
+      "/patrimonios",
+      express.static(path.join(process.cwd(), "uploads/patrimonios"))
+    );
     app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
     // ✅ Montar rutas
     app.use("/api", indexRoutes);
-    app.use("/api/patrimonios", patrimonioRoutes); // ✅ ruta activa para vista turista
+    app.use("/api/patrimonios", patrimonioRoutes);
 
-    app.listen(PORT, () => {
+    // ✅ Escuchar en todas las interfaces
+    app.listen(PORT, "0.0.0.0", () => {
       console.log(`=> Servidor corriendo en ${HOST}:${PORT}/api`);
+      console.log("=> Servidor accesible desde la red local y Apache");
     });
   } catch (error) {
     console.log("Error en index.js -> setupServer(), el error es: ", error);
@@ -72,8 +82,12 @@ async function setupAPI() {
   try {
     await connectDB();
     await setupServer();
-    await createUsers();
-    await createPatrimonios();
+
+    // ⚠️ Solo crear usuarios/patrimonios iniciales en desarrollo
+    if (process.env.NODE_ENV !== "production") {
+      await createUsers();
+      await createPatrimonios();
+    }
   } catch (error) {
     console.log("Error en index.js -> setupAPI(), el error es: ", error);
   }
