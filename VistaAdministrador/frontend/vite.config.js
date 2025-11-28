@@ -7,8 +7,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export default defineConfig({
+  base: '/admin/', // 👈 clave para que los assets se sirvan desde /admin
   plugins: [react()],
-  preview: {port:443, host:true},
+  preview: { port: 443, host: true },
   resolve: {
     alias: {
       '@components': path.resolve(__dirname, './src/components'),
