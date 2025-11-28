@@ -1,36 +1,46 @@
 "use strict";
 import dotenv from "dotenv";
 
-// ✅ Cargar automáticamente el archivo .env desde la raíz del backend
+// Cargar automáticamente el archivo .env desde la raíz del backend
 dotenv.config();
 
-// ✅ Variables de entorno
+// Variables de entorno principales
 export const PORT = process.env.PORT || 3000;
 export const HOST = process.env.HOST || "http://localhost";
 
+// Base de datos PostgreSQL
 export const DB_HOST = process.env.DB_HOST;
 export const DB_PORT = process.env.DB_PORT || 5432;
-export const DB_USERNAME = process.env.DB_USER;
-export const PASSWORD = process.env.DB_PASSWORD;
-export const DATABASE = process.env.DB_NAME;
 
+// Nombres consistentes
+export const DB_USER = process.env.DB_USER;
+export const DB_PASSWORD = process.env.DB_PASSWORD;
+export const DB_NAME = process.env.DB_NAME;
+
+// Aliases para compatibilidad con configDb.js
+export const DATABASE = DB_NAME;
+export const DB_USERNAME = DB_USER;
+export const PASSWORD = DB_PASSWORD;
+
+// Seguridad y autenticación
 export const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET || "clave_segura_default";
 export const cookieKey = process.env.COOKIE_KEY || "cookie_default";
 
 export const NODE_ENV = process.env.NODE_ENV || "development";
 
-// ✅ Validación de variables críticas
-if (!DB_HOST || !DB_USERNAME || !PASSWORD || !DATABASE) {
+// Validación de variables críticas
+if (!DB_HOST || !DB_USER || !DB_PASSWORD || !DB_NAME) {
   console.error("❌ Error: faltan variables de entorno para la base de datos");
   process.exit(1);
 }
 
-// ✅ Log de configuración (sin mostrar datos sensibles)
-console.log("🛠️ Configuración de entorno:");
-console.log("✅ DB_HOST:", DB_HOST);
-console.log("✅ DB_NAME:", DATABASE);
-console.log("✅ DB_USER:", DB_USERNAME);
-console.log("✅ DB_PASSWORD:", PASSWORD ? "********" : "NO DEFINIDA");
-console.log("✅ JWT_SECRET:", ACCESS_TOKEN_SECRET ? "********" : "NO DEFINIDA");
-console.log("✅ COOKIE_KEY:", cookieKey ? "********" : "NO DEFINIDA");
-console.log("✅ NODE_ENV:", NODE_ENV);
+// Log de configuración (sin mostrar datos sensibles)
+console.log("✅ Configuración de entorno:");
+console.log("   DB_HOST:", DB_HOST);
+console.log("   DB_NAME:", DB_NAME);
+console.log("   DB_USER:", DB_USER);
+console.log("   DB_PASSWORD:", DB_PASSWORD ? "********" : "NO DEFINIDA");
+console.log("   JWT_SECRET:", ACCESS_TOKEN_SECRET ? "********" : "NO DEFINIDA");
+console.log("   COOKIE_KEY:", cookieKey ? "********" : "NO DEFINIDA");
+console.log("   NODE_ENV:", NODE_ENV);
+

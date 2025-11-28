@@ -1,4 +1,7 @@
 "use strict";
+import dotenv from "dotenv";
+dotenv.config({ path: "../.env" }); // fuerza a leer el .env desde /backend
+
 import cors from "cors";
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
@@ -12,7 +15,7 @@ import { connectDB } from "./config/configDb.js";
 import { createUsers, createPatrimonios } from "./config/initialSetup.js";
 import { passportJwtSetup } from "./auth/passport.auth.js";
 
-// ✅ rutas
+// Rutas
 import indexRoutes from "./routes/index.routes.js";
 import patrimonioRoutes from "./routes/patrimonio.routes.js";
 
@@ -22,7 +25,7 @@ async function setupServer() {
 
     app.disable("x-powered-by");
 
-    // ✅ Configuración CORS para panel y turista (local + producción)
+    // Configuración CORS para panel y turista (local + producción)
     app.use(
       cors({
         credentials: true,
@@ -35,66 +38,40 @@ async function setupServer() {
       })
     );
 
-    app.use(urlencoded({ extended: true, limit: "1mb" }));
-    app.use(json({ limit: "1mb" }));
-    app.use(cookieParser());
+    // Middlewares
     app.use(morgan("dev"));
-
+    app.use(json());
+    app.use(urlencoded({ extended: false }));
+    app.use(cookieParser(cookieKey));
     app.use(
       session({
         secret: cookieKey,
         resave: false,
         saveUninitialized: false,
-        cookie: {
-          secure: false,
-          httpOnly: true,
-          sameSite: "lax",
-        },
       })
     );
-
     app.use(passport.initialize());
     app.use(passport.session());
-    passportJwtSetup();
+    passportJwtSetup(passport);
 
-    // ✅ Servir imágenes estáticas
-    app.use(
-      "/patrimonios",
-      express.static(path.join(process.cwd(), "uploads/patrimonios"))
-    );
-    app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
-
-    // ✅ Montar rutas
+    // Rutas
     app.use("/api", indexRoutes);
     app.use("/api/patrimonios", patrimonioRoutes);
 
-    // ✅ Escuchar en todas las interfaces
-    app.listen(PORT, "0.0.0.0", () => {
-      console.log(`=> Servidor corriendo en ${HOST}:${PORT}/api`);
-      console.log("=> Servidor accesible desde la red local y Apache");
+    // Conexión a la base de datos
+    await connectDB();
+    await createUsers();
+    await createPatrimonios();
+
+    // Servidor
+    app.listen(PORT, () => {
+      console.log(`🚀 Servidor backend corriendo en ${HOST}:${PORT}`);
     });
   } catch (error) {
-    console.log("Error en index.js -> setupServer(), el error es: ", error);
+    console.error("❌ Error al iniciar el servidor:", error);
+    process.exit(1);
   }
 }
 
-async function setupAPI() {
-  try {
-    await connectDB();
-    await setupServer();
+setupServer();
 
-    // ⚠️ Solo crear usuarios/patrimonios iniciales en desarrollo
-    if (process.env.NODE_ENV !== "production") {
-      await createUsers();
-      await createPatrimonios();
-    }
-  } catch (error) {
-    console.log("Error en index.js -> setupAPI(), el error es: ", error);
-  }
-}
-
-setupAPI()
-  .then(() => console.log("=> API Iniciada exitosamente"))
-  .catch((error) =>
-    console.log("Error en index.js -> setupAPI(), el error es: ", error)
-  );
