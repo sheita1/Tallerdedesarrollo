@@ -73,4 +73,27 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
+/**
+ * 📸 Listar todas las imágenes de un patrimonio
+ */
+router.get("/patrimonio/:patrimonioId", async (req, res) => {
+  const patrimonioId = parseInt(req.params.patrimonioId);
+  console.log("📥 [GET] Solicitud de imágenes para patrimonio ID:", patrimonioId);
+
+  const repo = AppDataSource.getRepository(PatrimonioImagen);
+
+  try {
+    const imagenes = await repo.findBy({ patrimonioId });
+
+    if (!imagenes || imagenes.length === 0) {
+      return res.status(404).json({ message: "No se encontraron imágenes para este patrimonio" });
+    }
+
+    res.json(imagenes); // 👉 devuelve un array
+  } catch (error) {
+    console.error("💥 Error al listar imágenes:", error);
+    res.status(500).json({ message: "Error interno al listar imágenes" });
+  }
+});
+
 export default router;
