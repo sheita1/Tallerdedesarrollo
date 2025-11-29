@@ -61,7 +61,6 @@ function DetallePatrimonio() {
   if (!patrimonio) return <p>No se encontró el patrimonio.</p>;
 
   // 🔧 Construcción de URL de imagen pública
-  // Si Apache tiene Alias /uploads, puedes usar `${PUBLIC_URL}/uploads/...`
   const imagenSrc = patrimonio.imagen
     ? `${PUBLIC_URL}/uploads/${patrimonio.imagen}`
     : null;
@@ -87,7 +86,6 @@ function DetallePatrimonio() {
       </div>
 
       <div style={{ marginTop: "3rem" }}>
-        {/* Usa el id que ya validamos */}
         <GaleriaPatrimonio patrimonioId={id} />
       </div>
     </div>
