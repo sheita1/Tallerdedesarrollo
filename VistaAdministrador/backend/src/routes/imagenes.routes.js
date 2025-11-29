@@ -23,7 +23,9 @@ router.get("/:id", async (req, res) => {
       return res.status(404).json({ message: "Imagen no encontrada" });
     }
 
-    const rutaAbsoluta = path.join(process.cwd(), "uploads/patrimonios", imagen.ruta);
+    // 🔧 Corrección: ya incluye 'patrimonios/' en imagen.ruta
+    const rutaAbsoluta = path.join(process.cwd(), "uploads", imagen.ruta);
+    console.log("📁 Ruta física:", rutaAbsoluta);
 
     if (fs.existsSync(rutaAbsoluta)) {
       return res.sendFile(rutaAbsoluta);
@@ -52,7 +54,9 @@ router.delete("/:id", async (req, res) => {
       return res.status(404).json({ message: "Imagen no encontrada" });
     }
 
-    const rutaAbsoluta = path.join(process.cwd(), "uploads/patrimonios", imagen.ruta);
+    // 🔧 Corrección: ya incluye 'patrimonios/' en imagen.ruta
+    const rutaAbsoluta = path.join(process.cwd(), "uploads", imagen.ruta);
+    console.log("📁 Ruta física:", rutaAbsoluta);
 
     if (fs.existsSync(rutaAbsoluta)) {
       fs.unlinkSync(rutaAbsoluta);
