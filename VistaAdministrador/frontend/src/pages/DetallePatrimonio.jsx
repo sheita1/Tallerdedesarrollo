@@ -86,6 +86,7 @@ function DetallePatrimonio() {
       </div>
 
       <div style={{ marginTop: "3rem" }}>
+        {/* ✅ Galería completa con subir/eliminar */}
         <GaleriaPatrimonio patrimonioId={id} />
       </div>
     </div>

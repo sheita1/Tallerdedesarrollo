@@ -8,11 +8,13 @@ function GaleriaImagenes({ patrimonioId }) {
     const fetchImagenes = async () => {
       try {
         const baseURL = import.meta.env.VITE_BASE_URL || "/api";
-        const res = await fetch(`${baseURL}/patrimonios/imagenes/${patrimonioId}`);
+        // 🔧 Corrección: endpoint correcto
+        const res = await fetch(`${baseURL}/patrimonios/imagenes/patrimonio/${patrimonioId}`);
         const data = await res.json();
-        setImagenes(data);
+        setImagenes(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error("❌ Error al cargar imágenes:", error);
+        setImagenes([]);
       } finally {
         setCargando(false);
       }
@@ -31,7 +33,7 @@ function GaleriaImagenes({ patrimonioId }) {
         {imagenes.map((img) => (
           <div key={img.id} style={{ border: "1px solid #ccc", padding: "8px", borderRadius: "6px" }}>
             <img
-              src={`/uploads/${img.ruta}`}
+              src={`/api/${img.ruta}`}
               alt={`Imagen ${img.id}`}
               style={{ width: "100%", height: "auto", objectFit: "cover", borderRadius: "4px" }}
             />

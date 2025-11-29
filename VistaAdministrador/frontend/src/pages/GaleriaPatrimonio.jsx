@@ -11,13 +11,15 @@ function GaleriaPatrimonio({ patrimonioId }) {
 
   // Cargar imágenes
   useEffect(() => {
-    instance.get(`/patrimonios/imagenes/${patrimonioId}`)
+    instance.get(`/patrimonios/imagenes/patrimonio/${patrimonioId}`) // 🔧 Corrección aquí
       .then((res) => {
-        setImagenes(res.data);
+        const data = res.data;
+        setImagenes(Array.isArray(data) ? data : []);
         setLoading(false);
       })
       .catch((err) => {
         console.error("💥 Error al cargar imágenes:", err);
+        setImagenes([]);
         setLoading(false);
       });
   }, [patrimonioId]);
@@ -50,7 +52,7 @@ function GaleriaPatrimonio({ patrimonioId }) {
     if (!archivo) return;
 
     const formData = new FormData();
-    formData.append("imagenes", archivo);
+    formData.append("imagen", archivo); // 🔧 asegúrate que coincida con backend
 
     try {
       const res = await instance.post(`/patrimonios/imagenes/${patrimonioId}`, formData, {
