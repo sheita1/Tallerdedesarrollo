@@ -76,8 +76,9 @@ async function setupServer() {
     await createPatrimonios();
 
     // Servidor
-    app.listen(PORT, () => {
-      console.log(`🚀 Servidor backend corriendo en ${HOST}:${PORT}`);
+    const port = PORT || 4001; // 👈 aseguramos que si PORT no está definido, use 4001
+    app.listen(port, () => {
+      console.log(`🚀 Servidor backend corriendo en ${HOST}:${port}`);
     });
   } catch (error) {
     console.error("❌ Error al iniciar el servidor:", error);
