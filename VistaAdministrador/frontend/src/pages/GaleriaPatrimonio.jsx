@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import instance from "@services/root.service"; 
 import '@styles/GaleriaPatrimonio.css';
 
 function GaleriaPatrimonio({ patrimonioId }) {
@@ -10,10 +11,9 @@ function GaleriaPatrimonio({ patrimonioId }) {
 
   // Cargar imágenes
   useEffect(() => {
-    fetch(`http://localhost:3000/api/patrimonios/imagenes/${patrimonioId}`)
-      .then((res) => res.json())
-      .then((data) => {
-        setImagenes(data);
+    instance.get(`/patrimonios/imagenes/${patrimonioId}`)
+      .then((res) => {
+        setImagenes(res.data);
         setLoading(false);
       })
       .catch((err) => {
@@ -22,12 +22,11 @@ function GaleriaPatrimonio({ patrimonioId }) {
       });
   }, [patrimonioId]);
 
-  // ✅ Cargar nombre del patrimonio (CORREGIDO)
+  // Cargar nombre del patrimonio
   useEffect(() => {
-    fetch(`http://localhost:3000/api/patrimonios/detail/?id=${patrimonioId}`)
-      .then((res) => res.json())
-      .then((data) => {
-        setNombrePatrimonio(data.nombre || `#${patrimonioId}`);
+    instance.get(`/patrimonios/detail/?id=${patrimonioId}`)
+      .then((res) => {
+        setNombrePatrimonio(res.data.nombre || `#${patrimonioId}`);
       })
       .catch((err) => {
         console.error("💥 Error al obtener nombre del patrimonio:", err);
@@ -37,11 +36,8 @@ function GaleriaPatrimonio({ patrimonioId }) {
 
   const handleEliminar = async (idImagen) => {
     try {
-      const response = await fetch(`http://localhost:3000/api/imagenes/${idImagen}`, {
-        method: "DELETE",
-      });
-
-      if (response.ok) {
+      const response = await instance.delete(`/imagenes/${idImagen}`);
+      if (response.status === 200) {
         setImagenes((prev) => prev.filter((img) => img.id !== idImagen));
       }
     } catch (err) {
@@ -57,12 +53,11 @@ function GaleriaPatrimonio({ patrimonioId }) {
     formData.append("imagenes", archivo);
 
     try {
-      const res = await fetch(`http://localhost:3000/api/patrimonios/imagenes/${patrimonioId}`, {
-        method: "POST",
-        body: formData,
+      const res = await instance.post(`/patrimonios/imagenes/${patrimonioId}`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
 
-      const respuesta = await res.json();
+      const respuesta = res.data;
       const nuevas = Array.isArray(respuesta) ? respuesta : [respuesta];
       setImagenes((prev) => [...prev, ...nuevas]);
       setArchivo(null);
@@ -91,7 +86,7 @@ function GaleriaPatrimonio({ patrimonioId }) {
           {imagenes.map((img) => (
             <div key={img.id} className="galeria-item">
               <img
-                src={`http://localhost:3000/${img.ruta}`}
+                src={`/api/${img.ruta}`}   {/* ✅ ya no usa localhost */}
                 alt={`Imagen ${img.id}`}
                 onClick={() => setImagenAmpliada(img)}
               />
@@ -106,7 +101,7 @@ function GaleriaPatrimonio({ patrimonioId }) {
       {imagenAmpliada && (
         <div className="galeria-overlay" onClick={() => setImagenAmpliada(null)}>
           <img
-            src={`http://localhost:3000/${imagenAmpliada.ruta}`}
+            src={`/api/${imagenAmpliada.ruta}`}  {/* ✅ corregido */}
             alt="Imagen ampliada"
             className="galeria-ampliada"
           />
