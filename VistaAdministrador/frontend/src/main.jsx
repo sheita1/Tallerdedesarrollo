@@ -13,8 +13,6 @@ import Root from '@pages/Root';
 import ProtectedRoute from '@components/ProtectedRoute';
 import '@styles/styles.css';
 
-
-
 // ✅ Wrappers para rutas con parámetros
 function DetallePatrimonioWrapper() {
   const { id } = useParams();
@@ -31,65 +29,28 @@ function VistaTuristaWrapper() {
   return <VistaTurista id={id} />;
 }
 
-const router = createBrowserRouter([
+const router = createBrowserRouter(
+  [
+    {
+      path: '/',
+      element: <Root />,
+      errorElement: <Error404 />,
+      children: [
+        { path: '/home', element: <Home /> },
+        { path: '/users', element: <ProtectedRoute allowedRoles={['administrador']}><Users /></ProtectedRoute> },
+        { path: '/patrimonios', element: <ProtectedRoute allowedRoles={['administrador']}><Patrimonios /></ProtectedRoute> },
+        { path: '/patrimonios/:id', element: <ProtectedRoute allowedRoles={['administrador']}><DetallePatrimonioWrapper /></ProtectedRoute> },
+        { path: '/galeria/:id', element: <ProtectedRoute allowedRoles={['administrador']}><GaleriaPatrimonioWrapper /></ProtectedRoute> },
+        { path: '/turismo', element: <TurismoOnePage /> },
+        { path: '/patrimonio/:id', element: <VistaTuristaWrapper /> },
+      ]
+    },
+    { path: '/auth', element: <Login /> }
+  ],
   {
-    path: '/',
-    element: <Root />,
-    errorElement: <Error404 />,
-    children: [
-      {
-        path: '/home',
-        element: <Home />
-      },
-      {
-        path: '/users',
-        element: (
-          <ProtectedRoute allowedRoles={['administrador']}>
-            <Users />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: '/patrimonios',
-        element: (
-          <ProtectedRoute allowedRoles={['administrador']}>
-            <Patrimonios />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: '/patrimonios/:id',
-        element: (
-          <ProtectedRoute allowedRoles={['administrador']}>
-            <DetallePatrimonioWrapper />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: '/galeria/:id',
-        element: (
-          <ProtectedRoute allowedRoles={['administrador']}>
-            <GaleriaPatrimonioWrapper />
-          </ProtectedRoute>
-        ),
-      },
-
-      // ✅ Rutas públicas para vista turista
-      {
-        path: '/turismo',
-        element: <TurismoOnePage />
-      },
-      {
-        path: '/patrimonio/:id',
-        element: <VistaTuristaWrapper />
-      },
-    ]
-  },
-  {
-    path: '/auth',
-    element: <Login />
+    basename: '/admin'   // 👈 Aquí está la clave
   }
-]);
+);
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <RouterProvider router={router} />
