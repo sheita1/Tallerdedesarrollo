@@ -1,18 +1,17 @@
 // src/pages/VistaTurista.jsx
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-//import "../styles/template.css";
-
 
 export default function VistaTurista() {
   const { id } = useParams();
   const [patrimonio, setPatrimonio] = useState(null);
 
   useEffect(() => {
-    fetch(`http://localhost:3000/api/patrimonios/detalle?id=${id}`)
+    const baseURL = import.meta.env.VITE_BASE_URL || "/api";
+    fetch(`${baseURL}/patrimonios/detalle?id=${id}`)
       .then((res) => res.json())
       .then((data) => setPatrimonio(data.data))
-      .catch((err) => console.error("Error al cargar detalle", err));
+      .catch((err) => console.error("❌ Error al cargar detalle", err));
   }, [id]);
 
   if (!patrimonio) return <p className="section-padding">Cargando patrimonio...</p>;
@@ -29,7 +28,7 @@ export default function VistaTurista() {
           </div>
           <div className="col-md-6">
             <img
-              src={`http://localhost:3000/patrimonios/${patrimonio.imagenDestacada}`}
+              src={`/uploads/${patrimonio.imagenDestacada}`}
               alt={patrimonio.nombre}
               className="img-fluid"
             />
@@ -45,7 +44,7 @@ export default function VistaTurista() {
               <div className="projects item">
                 <div className="position-re o-hidden">
                   <img
-                    src={`http://localhost:3000/patrimonios/${ruta}`}
+                    src={`/uploads/${ruta}`}
                     alt={`Imagen ${i + 1}`}
                   />
                 </div>

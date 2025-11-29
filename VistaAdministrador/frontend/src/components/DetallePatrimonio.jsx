@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import GaleriaImagenes from "./GaleriaImagenes";
 import ModalSubirImagenes from "./ModalSubirImagenes";
-
-
 import QrConLogo from "./QrConLogo";
 import logoMunicipal from "../assets/logo.png";
 
@@ -12,17 +10,16 @@ function DetallePatrimonio({ patrimonioId }) {
   const [recargarGaleria, setRecargarGaleria] = useState(false);
 
   useEffect(() => {
+    const baseURL = import.meta.env.VITE_BASE_URL || "/api";
     const fetchPatrimonio = async () => {
       try {
-        const baseURL = import.meta.env.VITE_API_URL || "http://localhost:3000";
-        const res = await fetch(`${baseURL}/api/patrimonios/detail/?id=${patrimonioId}`);
+        const res = await fetch(`${baseURL}/patrimonios/detail/?id=${patrimonioId}`);
         const data = await res.json();
         setPatrimonio(data);
       } catch (error) {
         console.error("❌ Error al cargar patrimonio:", error);
       }
     };
-
     fetchPatrimonio();
   }, [patrimonioId]);
 
@@ -31,6 +28,9 @@ function DetallePatrimonio({ patrimonioId }) {
   };
 
   if (!patrimonio) return <p>Cargando patrimonio...</p>;
+
+  // URL pública para QR (defínela en .env.production como VITE_PUBLIC_URL=http://146.83.198.35:1555)
+  const publicURL = import.meta.env.VITE_PUBLIC_URL || window.location.origin;
 
   return (
     <div className="detalle-patrimonio" style={{ padding: "1rem" }}>
@@ -51,11 +51,11 @@ function DetallePatrimonio({ patrimonioId }) {
         </div>
       )}
 
-      {/* ✅ QR con logo y botón de descarga */}
+      {/* ✅ QR dinámico con URL pública */}
       <div style={{ marginTop: "2rem" }}>
         <h3>📱 QR para imprimir</h3>
         <QrConLogo
-          url={`http://localhost:8080/patrimonio/${patrimonioId}`}
+          url={`${publicURL}/patrimonio/${patrimonioId}`}
           logo={logoMunicipal}
         />
       </div>

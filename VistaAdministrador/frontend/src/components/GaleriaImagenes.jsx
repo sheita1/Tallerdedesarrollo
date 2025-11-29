@@ -7,8 +7,8 @@ function GaleriaImagenes({ patrimonioId }) {
   useEffect(() => {
     const fetchImagenes = async () => {
       try {
-        const baseURL = import.meta.env.VITE_API_URL || "http://localhost:3000";
-        const res = await fetch(`${baseURL}/api/patrimonios/imagenes/${patrimonioId}`);
+        const baseURL = import.meta.env.VITE_BASE_URL || "/api";
+        const res = await fetch(`${baseURL}/patrimonios/imagenes/${patrimonioId}`);
         const data = await res.json();
         setImagenes(data);
       } catch (error) {

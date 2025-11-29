@@ -33,8 +33,8 @@ function SubirImagenPatrimonio({ patrimonioId }) {
     console.log("📤 Enviando imagen para patrimonio ID:", patrimonioId);
 
     try {
-      const baseURL = import.meta.env.VITE_API_URL || "http://localhost:3000";
-      const res = await fetch(`${baseURL}/api/patrimonios/imagen/${patrimonioId}`, {
+      const baseURL = import.meta.env.VITE_BASE_URL || "/api";
+      const res = await fetch(`${baseURL}/patrimonios/imagen/${patrimonioId}`, {
         method: "POST",
         body: formData,
         credentials: "include",
@@ -45,7 +45,7 @@ function SubirImagenPatrimonio({ patrimonioId }) {
       console.log("📦 Datos recibidos:", data);
 
       if (res.ok && data.imagen) {
-        const rutaFinal = `${baseURL}/uploads/${data.imagen.replace(/\\/g, "/")}`;
+        const rutaFinal = `/uploads/${data.imagen.replace(/\\/g, "/")}`;
         console.log("🖼️ URL pública de imagen:", rutaFinal);
         setMensaje("✅ Imagen subida correctamente.");
         setPreview(rutaFinal);

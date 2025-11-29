@@ -21,8 +21,8 @@ function ModalSubirImagenes({ patrimonioId, onClose, onUploadSuccess }) {
     const formData = new FormData();
     imagenes.forEach((img) => formData.append("imagenes", img));
 
-    const baseURL = import.meta.env.VITE_API_URL || "http://localhost:3000";
-    const endpoint = `${baseURL}/api/patrimonios/imagenes/${patrimonioId}`;
+    const baseURL = import.meta.env.VITE_BASE_URL || "/api";
+    const endpoint = `${baseURL}/patrimonios/imagenes/${patrimonioId}`;
 
     console.log("📤 Enviando múltiples imágenes a:", endpoint);
     setSubiendo(true);
@@ -71,4 +71,3 @@ function ModalSubirImagenes({ patrimonioId, onClose, onUploadSuccess }) {
 }
 
 export default ModalSubirImagenes;
-  
