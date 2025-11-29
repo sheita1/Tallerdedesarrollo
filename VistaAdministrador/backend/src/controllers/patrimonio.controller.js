@@ -19,12 +19,15 @@ import {
   handleSuccess,
 } from "../handlers/responseHandlers.js";
 
-import { AppDataSource } from "../config/configDb.js"; // ✅ usa tu instancia existente
+import { AppDataSource } from "../config/configDb.js";
+
+const patrimonioRepo = AppDataSource.getRepository("Patrimonio");
 
 // Obtener un patrimonio por ID o nombre
 export async function getPatrimonio(req, res) {
   try {
     const { id, nombre } = req.query;
+    console.log("📥 [GET Patrimonio] Query:", req.query);
 
     const { error } = patrimonioQueryValidation.validate({ id, nombre });
     if (error) return handleErrorClient(res, 400, error.message);
@@ -34,6 +37,7 @@ export async function getPatrimonio(req, res) {
 
     handleSuccess(res, 200, "Patrimonio encontrado", patrimonio);
   } catch (error) {
+    console.error("💥 [GET Patrimonio] Error:", error);
     handleErrorServer(res, 500, error.message);
   }
 }
@@ -41,6 +45,7 @@ export async function getPatrimonio(req, res) {
 // Obtener todos los patrimonios
 export async function getPatrimonios(req, res) {
   try {
+    console.log("📥 [GET Patrimonios]");
     const [patrimonios, errorPatrimonios] = await getPatrimoniosService();
 
     if (errorPatrimonios) {
@@ -57,6 +62,7 @@ export async function getPatrimonios(req, res) {
 
     return handleSuccess(res, 200, "Patrimonios encontrados", patrimonios);
   } catch (error) {
+    console.error("💥 [GET Patrimonios] Error:", error);
     handleErrorServer(res, 500, error.message);
   }
 }
@@ -64,16 +70,12 @@ export async function getPatrimonios(req, res) {
 // Crear un nuevo patrimonio
 export async function createPatrimonio(req, res) {
   try {
-    const { body } = req;
+    console.log("📥 [CREATE Patrimonio] Body:", req.body);
 
+    const { body } = req;
     const { error: bodyError } = patrimonioBodyValidation.validate(body);
     if (bodyError) {
-      return handleErrorClient(
-        res,
-        400,
-        "Error de validación en los datos enviados",
-        bodyError.message
-      );
+      return handleErrorClient(res, 400, "Error de validación en los datos enviados", bodyError.message);
     }
 
     const [nuevoPatrimonio, errorCreacion] = await createPatrimonioService(body);
@@ -83,6 +85,7 @@ export async function createPatrimonio(req, res) {
 
     handleSuccess(res, 201, "Patrimonio registrado correctamente", nuevoPatrimonio);
   } catch (error) {
+    console.error("💥 [CREATE Patrimonio] Error:", error);
     handleErrorServer(res, 500, error.message);
   }
 }
@@ -90,27 +93,19 @@ export async function createPatrimonio(req, res) {
 // Actualizar un patrimonio existente
 export async function updatePatrimonio(req, res) {
   try {
+    console.log("📥 [UPDATE Patrimonio] Query:", req.query, "Body:", req.body);
+
     const { id, nombre } = req.query;
     const { body } = req;
 
     const { error: queryError } = patrimonioQueryValidation.validate({ id, nombre });
     if (queryError) {
-      return handleErrorClient(
-        res,
-        400,
-        "Error de validación en la consulta",
-        queryError.message
-      );
+      return handleErrorClient(res, 400, "Error de validación en la consulta", queryError.message);
     }
 
     const { error: bodyError } = patrimonioBodyValidation.validate(body);
     if (bodyError) {
-      return handleErrorClient(
-        res,
-        400,
-        "Error de validación en los datos enviados",
-        bodyError.message
-      );
+      return handleErrorClient(res, 400, "Error de validación en los datos enviados", bodyError.message);
     }
 
     const [patrimonio, patrimonioError] = await updatePatrimonioService({ id, nombre }, body);
@@ -120,6 +115,7 @@ export async function updatePatrimonio(req, res) {
 
     handleSuccess(res, 200, "Patrimonio modificado correctamente", patrimonio);
   } catch (error) {
+    console.error("💥 [UPDATE Patrimonio] Error:", error);
     handleErrorServer(res, 500, error.message);
   }
 }
@@ -127,16 +123,12 @@ export async function updatePatrimonio(req, res) {
 // Eliminar un patrimonio
 export async function deletePatrimonio(req, res) {
   try {
-    const { id, nombre } = req.query;
+    console.log("📥 [DELETE Patrimonio] Query:", req.query);
 
+    const { id, nombre } = req.query;
     const { error: queryError } = patrimonioQueryValidation.validate({ id, nombre });
     if (queryError) {
-      return handleErrorClient(
-        res,
-        400,
-        "Error de validación en la consulta",
-        queryError.message
-      );
+      return handleErrorClient(res, 400, "Error de validación en la consulta", queryError.message);
     }
 
     const [patrimonioDelete, errorPatrimonioDelete] = await deletePatrimonioService({ id, nombre });
@@ -146,13 +138,15 @@ export async function deletePatrimonio(req, res) {
 
     handleSuccess(res, 200, "Patrimonio eliminado correctamente", patrimonioDelete);
   } catch (error) {
+    console.error("💥 [DELETE Patrimonio] Error:", error);
     handleErrorServer(res, 500, error.message);
   }
 }
 
-// ✅ Patrimonios públicos para vista turista
+// Patrimonios públicos
 export async function getPatrimoniosPublicos(req, res) {
   try {
+    console.log("📥 [GET Patrimonios Públicos]");
     const repo = AppDataSource.getRepository("Patrimonio");
     const patrimonios = await repo.find({
       where: { estado: "activo", visibleEnTurismo: true },
@@ -170,14 +164,17 @@ export async function getPatrimoniosPublicos(req, res) {
 
     handleSuccess(res, 200, "Patrimonios públicos encontrados", data);
   } catch (error) {
+    console.error("💥 [GET Patrimonios Públicos] Error:", error);
     handleErrorServer(res, 500, error.message);
   }
 }
 
-// ✅ Detalle de patrimonio con galería
+// Detalle de patrimonio
 export async function getDetallePatrimonio(req, res) {
   try {
     const { id } = req.query;
+    console.log("📥 [GET Detalle Patrimonio] id:", id);
+
     if (!id || isNaN(parseInt(id))) {
       return handleErrorClient(res, 400, "ID inválido");
     }
@@ -204,6 +201,35 @@ export async function getDetallePatrimonio(req, res) {
 
     handleSuccess(res, 200, "Detalle de patrimonio", data);
   } catch (error) {
+    console.error("💥 [GET Detalle Patrimonio] Error:", error);
+    handleErrorServer(res, 500, error.message);
+  }
+}
+
+// Subida de imagen principal
+export async function subirImagenPatrimonio(req, res) {
+  try {
+    console.log("📥 [UPLOAD Imagen] Params:", req.params);
+    console.log("📥 [UPLOAD Imagen] Body:", req.body);
+    console.log("📥 [UPLOAD Imagen] File:", req.file);
+
+    const { id } = req.params;
+    if (!id) {
+      return handleErrorClient(res, 400, "Falta ID de patrimonio");
+    }
+    if (!req.file) {
+      return handleErrorClient(res, 400, "No se recibió archivo de imagen");
+    }
+
+    const fileName = req.file.filename;
+    console.log(`🖼️ [UPLOAD Imagen] Guardando '${fileName}' en patrimonio id=${id}`);
+
+    const result = await patrimonioRepo.update({ id: parseInt(id) }, { imagen: fileName });
+    console.log("🟢 [UPLOAD Imagen] Resultado update:", result);
+
+    handleSuccess(res, 200, "Imagen subida correctamente", { id, file: fileName });
+  } catch (error) {
+    console.error("💥 [UPLOAD Imagen] Error:", error);
     handleErrorServer(res, 500, error.message);
   }
 }
