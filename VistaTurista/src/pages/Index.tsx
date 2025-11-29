@@ -12,8 +12,8 @@ const Index = () => {
   useEffect(() => {
     document.title = "Municipalidad de Tomé – Turismo Institucional";
 
-    // Traer patrimonios públicos desde el backend
-    fetch("http://localhost:3000/api/patrimonios/public")
+    const baseURL = import.meta.env.VITE_BASE_URL || "/api";
+    fetch(`${baseURL}/patrimonios/public`)
       .then((res) => res.json())
       .then((json) => {
         if (json.data) {
@@ -27,19 +27,11 @@ const Index = () => {
 
   return (
     <div className="min-h-screen overflow-hidden">
-      {/* Navegación superior */}
       <Navigation />
-
-      {/* Hero/banner con carrusel */}
       <Hero />
-
-      {/* Sección de bienvenida institucional */}
       <Welcome />
-
-      {/* Carrusel de testimonios con imágenes */}
       <TestimonialsWithImages />
 
-      {/* Patrimonios dinámicos */}
       <section className="relative py-[120px] bg-white bg-cover bg-no-repeat bg-center">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
@@ -57,12 +49,10 @@ const Index = () => {
             </p>
           </div>
 
-          {/* Render dinámico desde la BD */}
           <ImageCard arr={patrimonios} />
         </div>
       </section>
 
-      {/* Footer institucional */}
       <Footer />
     </div>
   );

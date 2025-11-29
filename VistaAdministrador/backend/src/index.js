@@ -54,6 +54,9 @@ async function setupServer() {
     app.use(passport.session());
     passportJwtSetup(passport);
 
+    // ✅ Servir archivos estáticos de la carpeta uploads
+    app.use("/uploads", express.static(path.join(__dirname, "../../uploads")));
+
     // Rutas
     app.use("/api", indexRoutes);
     app.use("/api/patrimonios", patrimonioRoutes);
@@ -74,4 +77,3 @@ async function setupServer() {
 }
 
 setupServer();
-

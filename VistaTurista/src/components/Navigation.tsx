@@ -7,7 +7,8 @@ const Navigation = () => {
   const [patrimonios, setPatrimonios] = useState<any[]>([]);
 
   useEffect(() => {
-    fetch("http://localhost:3000/api/patrimonios/public")
+    const baseURL = import.meta.env.VITE_BASE_URL || "/api";
+    fetch(`${baseURL}/patrimonios/public`)
       .then((res) => res.json())
       .then((json) => {
         if (json.data) {
@@ -39,7 +40,6 @@ const Navigation = () => {
                 {p.nombre}
               </NavLink>
             ))}
-            {/* ✅ Ahora Contacto apunta a la nueva página */}
             <NavLink to="/contacto">Contacto</NavLink>
           </div>
 
@@ -67,7 +67,6 @@ const Navigation = () => {
         </div>
       </div>
 
-      {/* Fondo oscuro al abrir menú móvil */}
       {menuOpen && (
         <div
           className="fixed inset-0 bg-black/40 z-40"
@@ -75,7 +74,6 @@ const Navigation = () => {
         />
       )}
 
-      {/* Sidebar móvil */}
       <div
         className={`fixed top-0 left-0 h-screen w-64 bg-white z-50 shadow-md transform transition-transform duration-300 ${
           menuOpen ? "translate-x-0" : "-translate-x-full"
@@ -92,7 +90,6 @@ const Navigation = () => {
               {p.nombre}
             </NavLink>
           ))}
-          {/* ✅ Contacto también en menú móvil */}
           <NavLink to="/contacto" onClick={() => setMenuOpen(false)}>Contacto</NavLink>
         </div>
       </div>
