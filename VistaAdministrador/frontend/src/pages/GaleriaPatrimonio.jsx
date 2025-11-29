@@ -86,7 +86,7 @@ function GaleriaPatrimonio({ patrimonioId }) {
           {imagenes.map((img) => (
             <div key={img.id} className="galeria-item">
               <img
-                src={`/api/${img.ruta}`}   {/* ✅ ya no usa localhost */}
+                src={`/api/${img.ruta}`}
                 alt={`Imagen ${img.id}`}
                 onClick={() => setImagenAmpliada(img)}
               />
@@ -101,7 +101,7 @@ function GaleriaPatrimonio({ patrimonioId }) {
       {imagenAmpliada && (
         <div className="galeria-overlay" onClick={() => setImagenAmpliada(null)}>
           <img
-            src={`/api/${imagenAmpliada.ruta}`}  {/* ✅ corregido */}
+            src={`/api/${imagenAmpliada.ruta}`}
             alt="Imagen ampliada"
             className="galeria-ampliada"
           />
