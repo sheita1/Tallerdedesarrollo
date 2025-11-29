@@ -1,83 +1,115 @@
 import { useEffect, useState } from "react";
-import GaleriaImagenes from "./GaleriaImagenes";
-import ModalSubirImagenes from "./ModalSubirImagenes";
-import QrConLogo from "./QrConLogo";
-import logoMunicipal from "../assets/logo.png";
+import instance from "@services/root.service"; 
+import '@styles/GaleriaPatrimonio.css';
 
-function DetallePatrimonio({ patrimonioId }) {
-  const [patrimonio, setPatrimonio] = useState(null);
-  const [mostrarModal, setMostrarModal] = useState(false);
-  const [recargarGaleria, setRecargarGaleria] = useState(false);
+function GaleriaPatrimonio({ patrimonioId }) {
+  const [imagenes, setImagenes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [imagenAmpliada, setImagenAmpliada] = useState(null);
+  const [archivo, setArchivo] = useState(null);
+  const [nombrePatrimonio, setNombrePatrimonio] = useState("");
 
+  // Cargar imágenes
   useEffect(() => {
-    const baseURL = import.meta.env.VITE_BASE_URL || "/api";
-    const fetchPatrimonio = async () => {
-      try {
-        const res = await fetch(`${baseURL}/patrimonios/detail/?id=${patrimonioId}`);
-        const data = await res.json();
-        setPatrimonio(data);
-      } catch (error) {
-        console.error("❌ Error al cargar patrimonio:", error);
-      }
-    };
-    fetchPatrimonio();
+    instance.get(`/patrimonios/imagenes/${patrimonioId}`)
+      .then((res) => {
+        setImagenes(res.data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("💥 Error al cargar imágenes:", err);
+        setLoading(false);
+      });
   }, [patrimonioId]);
 
-  const handleRecargarGaleria = () => {
-    setRecargarGaleria((prev) => !prev);
+  // Cargar nombre del patrimonio
+  useEffect(() => {
+    instance.get(`/patrimonios/detail/?id=${patrimonioId}`)
+      .then((res) => {
+        setNombrePatrimonio(res.data.nombre || `#${patrimonioId}`);
+      })
+      .catch((err) => {
+        console.error("💥 Error al obtener nombre del patrimonio:", err);
+        setNombrePatrimonio(`#${patrimonioId}`);
+      });
+  }, [patrimonioId]);
+
+  const handleEliminar = async (idImagen) => {
+    try {
+      const response = await instance.delete(`/imagenes/${idImagen}`);
+      if (response.status === 200) {
+        setImagenes((prev) => prev.filter((img) => img.id !== idImagen));
+      }
+    } catch (err) {
+      console.error("💥 Error al eliminar imagen:", err);
+    }
   };
 
-  if (!patrimonio) return <p>Cargando patrimonio...</p>;
+  const handleSubir = async (e) => {
+    e.preventDefault();
+    if (!archivo) return;
 
-  // URL pública para QR (defínela en .env.production como VITE_PUBLIC_URL=http://146.83.198.35:1555)
-  const publicURL = import.meta.env.VITE_PUBLIC_URL || window.location.origin;
+    const formData = new FormData();
+    formData.append("imagenes", archivo);
+
+    try {
+      const res = await instance.post(`/patrimonios/imagenes/${patrimonioId}`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      const respuesta = res.data;
+      const nuevas = Array.isArray(respuesta) ? respuesta : [respuesta];
+      setImagenes((prev) => [...prev, ...nuevas]);
+      setArchivo(null);
+    } catch (err) {
+      console.error("💥 Error al subir imagen:", err);
+    }
+  };
+
+  if (loading) return <p>Cargando galería...</p>;
 
   return (
-    <div className="detalle-patrimonio" style={{ padding: "1rem" }}>
-      <h2>{patrimonio.nombre}</h2>
-      <p><strong>Ubicación:</strong> {patrimonio.ubicacion}</p>
-      <p><strong>Tipo:</strong> {patrimonio.tipo}</p>
-      <p><strong>Estado:</strong> {patrimonio.estado}</p>
-      <p><strong>Descripción:</strong> {patrimonio.descripcion}</p>
+    <div className="galeria-container">
+      <h2>🖼️ Galería del Patrimonio {nombrePatrimonio}</h2>
 
-      {patrimonio.imagen && (
-        <div style={{ marginTop: "1rem" }}>
-          <h3>🖼️ Imagen principal</h3>
-          {/* ✅ Usar directamente la ruta pública que devuelve el backend */}
-          <img
-            src={patrimonio.imagen}
-            alt="Imagen principal"
-            style={{ maxWidth: "400px", borderRadius: "8px" }}
-          />
+      <form onSubmit={handleSubir} className="galeria-formulario">
+        <input
+          type="file"
+          accept="image/*"
+          onChange={(e) => setArchivo(e.target.files[0])}
+        />
+        <button type="submit">📤 Subir imagen</button>
+      </form>
+
+      {imagenes.length > 0 ? (
+        <div className="galeria-grid">
+          {imagenes.map((img) => (
+            <div key={img.id} className="galeria-item">
+              {/* ✅ Usar directamente la ruta pública que devuelve el backend */}
+              <img
+                src={img.ruta}
+                alt={`Imagen ${img.id}`}
+                onClick={() => setImagenAmpliada(img)}
+              />
+              <button onClick={() => handleEliminar(img.id)}>🗑️</button>
+            </div>
+          ))}
         </div>
+      ) : (
+        <p>No hay imágenes registradas.</p>
       )}
 
-      {/* ✅ QR dinámico con URL pública */}
-      <div style={{ marginTop: "2rem" }}>
-        <h3>📱 QR para imprimir</h3>
-        <QrConLogo
-          url={`${publicURL}/patrimonio/${patrimonioId}`}
-          logo={logoMunicipal}
-        />
-      </div>
-
-      <hr style={{ margin: "2rem 0" }} />
-
-      <GaleriaImagenes patrimonioId={patrimonioId} key={recargarGaleria} />
-
-      <button onClick={() => setMostrarModal(true)} style={{ marginTop: "1rem" }}>
-        📤 Subir nuevas imágenes PNG
-      </button>
-
-      {mostrarModal && (
-        <ModalSubirImagenes
-          patrimonioId={patrimonioId}
-          onClose={() => setMostrarModal(false)}
-          onUploadSuccess={handleRecargarGaleria}
-        />
+      {imagenAmpliada && (
+        <div className="galeria-overlay" onClick={() => setImagenAmpliada(null)}>
+          <img
+            src={imagenAmpliada.ruta}
+            alt="Imagen ampliada"
+            className="galeria-ampliada"
+          />
+        </div>
       )}
     </div>
   );
 }
 
-export default DetallePatrimonio;
+export default GaleriaPatrimonio;
