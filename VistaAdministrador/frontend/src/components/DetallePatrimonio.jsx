@@ -43,8 +43,9 @@ function DetallePatrimonio({ patrimonioId }) {
       {patrimonio.imagen && (
         <div style={{ marginTop: "1rem" }}>
           <h3>🖼️ Imagen principal</h3>
+          {/* ✅ Usar directamente la ruta pública que devuelve el backend */}
           <img
-            src={`/uploads/${patrimonio.imagen}`}
+            src={patrimonio.imagen}
             alt="Imagen principal"
             style={{ maxWidth: "400px", borderRadius: "8px" }}
           />
