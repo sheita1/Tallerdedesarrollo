@@ -26,13 +26,15 @@ const patrimonioRepo = AppDataSource.getRepository("Patrimonio");
 // Obtener un patrimonio por ID o nombre
 export async function getPatrimonio(req, res) {
   try {
-    const { id, nombre } = req.query;
     console.log("📥 [GET Patrimonio] Query:", req.query);
 
+    const { id, nombre } = req.query;
     const { error } = patrimonioQueryValidation.validate({ id, nombre });
     if (error) return handleErrorClient(res, 400, error.message);
 
     const [patrimonio, errorPatrimonio] = await getPatrimonioService({ id, nombre });
+    console.log("🔎 [GET Patrimonio] Resultado:", patrimonio);
+
     if (errorPatrimonio) return handleErrorClient(res, 404, errorPatrimonio);
 
     handleSuccess(res, 200, "Patrimonio encontrado", patrimonio);
@@ -47,6 +49,8 @@ export async function getPatrimonios(req, res) {
   try {
     console.log("📥 [GET Patrimonios]");
     const [patrimonios, errorPatrimonios] = await getPatrimoniosService();
+
+    console.log("🔎 [GET Patrimonios] Resultado:", patrimonios);
 
     if (errorPatrimonios) {
       return handleErrorClient(res, 500, "Error al obtener patrimonios", errorPatrimonios);
@@ -79,6 +83,8 @@ export async function createPatrimonio(req, res) {
     }
 
     const [nuevoPatrimonio, errorCreacion] = await createPatrimonioService(body);
+    console.log("🟢 [CREATE Patrimonio] Resultado:", nuevoPatrimonio);
+
     if (errorCreacion) {
       return handleErrorClient(res, 400, "Error al registrar el patrimonio", errorCreacion);
     }
@@ -109,6 +115,8 @@ export async function updatePatrimonio(req, res) {
     }
 
     const [patrimonio, patrimonioError] = await updatePatrimonioService({ id, nombre }, body);
+    console.log("🟢 [UPDATE Patrimonio] Resultado:", patrimonio);
+
     if (patrimonioError) {
       return handleErrorClient(res, 400, "Error modificando el patrimonio", patrimonioError);
     }
@@ -132,6 +140,8 @@ export async function deletePatrimonio(req, res) {
     }
 
     const [patrimonioDelete, errorPatrimonioDelete] = await deletePatrimonioService({ id, nombre });
+    console.log("🟢 [DELETE Patrimonio] Resultado:", patrimonioDelete);
+
     if (errorPatrimonioDelete) {
       return handleErrorClient(res, 404, "Error eliminando el patrimonio", errorPatrimonioDelete);
     }
@@ -152,6 +162,8 @@ export async function getPatrimoniosPublicos(req, res) {
       where: { estado: "activo", visibleEnTurismo: true },
       order: { nombre: "ASC" },
     });
+
+    console.log("🔎 [GET Patrimonios Públicos] Resultado:", patrimonios);
 
     const data = patrimonios.map((p) => ({
       id: p.id,
@@ -176,6 +188,7 @@ export async function getDetallePatrimonio(req, res) {
     console.log("📥 [GET Detalle Patrimonio] id:", id);
 
     if (!id || isNaN(parseInt(id))) {
+      console.log("⚠️ [GET Detalle Patrimonio] ID inválido");
       return handleErrorClient(res, 400, "ID inválido");
     }
 
@@ -183,11 +196,15 @@ export async function getDetallePatrimonio(req, res) {
     const imagenRepo = AppDataSource.getRepository("PatrimonioImagen");
 
     const patrimonio = await repo.findOneBy({ id: parseInt(id) });
+    console.log("🔎 [GET Detalle Patrimonio] Patrimonio encontrado:", patrimonio);
+
     if (!patrimonio || patrimonio.estado !== "activo" || !patrimonio.visibleEnTurismo) {
+      console.log("⚠️ [GET Detalle Patrimonio] Patrimonio no encontrado o no visible");
       return handleErrorClient(res, 404, "Patrimonio no encontrado o no visible");
     }
 
     const imagenes = await imagenRepo.find({ where: { patrimonioId: patrimonio.id } });
+    console.log("📸 [GET Detalle Patrimonio] Imágenes encontradas:", imagenes);
 
     const data = {
       id: patrimonio.id,
@@ -206,7 +223,7 @@ export async function getDetallePatrimonio(req, res) {
   }
 }
 
-// Subida de imagen principal
+// Subida de imagen principal con logs detallados
 export async function subirImagenPatrimonio(req, res) {
   try {
     console.log("📥 [UPLOAD Imagen] Params:", req.params);
@@ -215,19 +232,51 @@ export async function subirImagenPatrimonio(req, res) {
 
     const { id } = req.params;
     if (!id) {
+      console.log("⚠️ [UPLOAD Imagen] Falta ID de patrimonio en params");
       return handleErrorClient(res, 400, "Falta ID de patrimonio");
     }
     if (!req.file) {
+      console.log("⚠️ [UPLOAD Imagen] No se recibió archivo en la petición");
       return handleErrorClient(res, 400, "No se recibió archivo de imagen");
     }
 
+    // Nombre del archivo que multer guardó en /uploads
     const fileName = req.file.filename;
-    console.log(`🖼️ [UPLOAD Imagen] Guardando '${fileName}' en patrimonio id=${id}`);
+    const filePath = req.file.path; // ruta absoluta/relativa según tu multer
+    const destDir = "uploads"; // carpeta base
+    console.log("🖼️ [UPLOAD Imagen] Archivo recibido:", { fileName, filePath, destDir });
 
-    const result = await patrimonioRepo.update({ id: parseInt(id) }, { imagen: fileName });
-    console.log("🟢 [UPLOAD Imagen] Resultado update:", result);
+    // Verificar que el patrimonio existe antes de actualizar
+    const patrimonioId = parseInt(id);
+    const patrimonioExistente = await patrimonioRepo.findOneBy({ id: patrimonioId });
+    console.log("🔎 [UPLOAD Imagen] Patrimonio existente:", patrimonioExistente);
 
-    handleSuccess(res, 200, "Imagen subida correctamente", { id, file: fileName });
+    if (!patrimonioExistente) {
+      console.log("⚠️ [UPLOAD Imagen] Patrimonio no existe en BD");
+      return handleErrorClient(res, 404, "Patrimonio no encontrado");
+    }
+
+    // Actualizar el campo 'imagen' del patrimonio con el nombre del archivo
+    const resultUpdate = await patrimonioRepo.update(
+      { id: patrimonioId },
+      { imagen: fileName }
+    );
+    console.log("🟢 [UPLOAD Imagen] Resultado update Patrimonio:", resultUpdate);
+
+    // Confirmación de escritura
+    const patrimonioActualizado = await patrimonioRepo.findOneBy({ id: patrimonioId });
+    console.log("✅ [UPLOAD Imagen] Patrimonio actualizado:", patrimonioActualizado);
+
+    // Respuesta final
+    handleSuccess(res, 200, "Imagen subida correctamente", {
+      patrimonioId,
+      fileName,
+      storedAt: destDir,
+      patrimonio: {
+        id: patrimonioActualizado?.id,
+        imagen: patrimonioActualizado?.imagen,
+      },
+    });
   } catch (error) {
     console.error("💥 [UPLOAD Imagen] Error:", error);
     handleErrorServer(res, 500, error.message);

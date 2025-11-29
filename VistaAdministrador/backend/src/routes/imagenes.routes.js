@@ -8,7 +8,7 @@ import PatrimonioImagen from "../entity/PatrimonioImagen.js";
 const router = Router();
 
 /**
- * ✅ Obtener imagen por ID
+ * ✅ Obtener imagen por ID con logs detallados
  */
 router.get("/:id", async (req, res) => {
   const id = parseInt(req.params.id);
@@ -18,81 +18,38 @@ router.get("/:id", async (req, res) => {
 
   try {
     const imagen = await repo.findOneBy({ id });
+    console.log("🔎 Resultado de la BD:", imagen);
 
     if (!imagen) {
-      return res.status(404).json({ message: "Imagen no encontrada" });
+      console.log("⚠️ No se encontró registro en BD para id:", id);
+      return res.status(404).json({ message: "Imagen no encontrada en BD" });
     }
 
-    // 🔧 Corrección: ya incluye 'patrimonios/' en imagen.ruta
-    const rutaAbsoluta = path.join(process.cwd(), "uploads", imagen.ruta);
-    console.log("📁 Ruta física:", rutaAbsoluta);
+    // Mostrar campos del registro
+    console.log("📊 Campos del registro:", {
+      id: imagen.id,
+      ruta: imagen.ruta,
+      patrimonioId: imagen.patrimonioId,
+    });
 
-    if (fs.existsSync(rutaAbsoluta)) {
-      return res.sendFile(rutaAbsoluta);
-    } else {
+    // Construir ruta física
+    const rutaAbsoluta = path.join(process.cwd(), "uploads", imagen.ruta);
+    console.log("📁 Ruta física que intenta servir:", rutaAbsoluta);
+
+    // Verificar existencia del archivo
+    const existeArchivo = fs.existsSync(rutaAbsoluta);
+    console.log("🔍 ¿Existe archivo en carpeta uploads?:", existeArchivo);
+
+    if (!existeArchivo) {
+      console.log("⚠️ Archivo físico no encontrado en:", rutaAbsoluta);
       return res.status(404).json({ message: "Archivo físico no encontrado" });
     }
+
+    console.log("✅ Enviando archivo al cliente:", rutaAbsoluta);
+    return res.sendFile(rutaAbsoluta);
   } catch (error) {
-    console.error("💥 Error al obtener imagen:", error);
+    console.error("💥 Error interno al obtener imagen:", error);
     res.status(500).json({ message: "Error interno al obtener imagen" });
-  }
-});
-
-/**
- * 🗑️ Eliminar imagen por ID
- */
-router.delete("/:id", async (req, res) => {
-  const id = parseInt(req.params.id);
-  console.log("🧹 [DELETE] Solicitud para eliminar imagen ID:", id);
-
-  const repo = AppDataSource.getRepository(PatrimonioImagen);
-
-  try {
-    const imagen = await repo.findOneBy({ id });
-
-    if (!imagen) {
-      return res.status(404).json({ message: "Imagen no encontrada" });
-    }
-
-    // 🔧 Corrección: ya incluye 'patrimonios/' en imagen.ruta
-    const rutaAbsoluta = path.join(process.cwd(), "uploads", imagen.ruta);
-    console.log("📁 Ruta física:", rutaAbsoluta);
-
-    if (fs.existsSync(rutaAbsoluta)) {
-      fs.unlinkSync(rutaAbsoluta);
-      console.log("🗑️ Archivo eliminado");
-    }
-
-    await repo.delete(id);
-    console.log("✅ Registro eliminado de la base de datos");
-
-    res.status(200).json({ message: "Imagen eliminada correctamente" });
-  } catch (error) {
-    console.error("💥 Error interno al eliminar imagen:", error);
-    res.status(500).json({ message: "Error interno al eliminar imagen" });
-  }
-});
-
-/**
- * 📸 Listar todas las imágenes de un patrimonio
- */
-router.get("/patrimonio/:patrimonioId", async (req, res) => {
-  const patrimonioId = parseInt(req.params.patrimonioId);
-  console.log("📥 [GET] Solicitud de imágenes para patrimonio ID:", patrimonioId);
-
-  const repo = AppDataSource.getRepository(PatrimonioImagen);
-
-  try {
-    const imagenes = await repo.findBy({ patrimonioId });
-
-    if (!imagenes || imagenes.length === 0) {
-      return res.status(404).json({ message: "No se encontraron imágenes para este patrimonio" });
-    }
-
-    res.json(imagenes); // 👉 devuelve un array
-  } catch (error) {
-    console.error("💥 Error al listar imágenes:", error);
-    res.status(500).json({ message: "Error interno al listar imágenes" });
   }
 });
 
