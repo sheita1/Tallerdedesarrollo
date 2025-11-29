@@ -1,5 +1,6 @@
 import multer from "multer";
 import path from "path";
+import fs from "fs";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
 
@@ -11,7 +12,18 @@ const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     const destino = path.join(__dirname, "../../uploads/patrimonios");
     console.log("📂 [multer] Guardando imagen en:", destino);
-    cb(null, destino);
+
+    try {
+      // Crear directorio si no existe
+      if (!fs.existsSync(destino)) {
+        fs.mkdirSync(destino, { recursive: true });
+        console.log("🛠️ [multer] Directorio creado:", destino);
+      }
+      cb(null, destino);
+    } catch (err) {
+      console.error("💥 [multer] Error creando directorio:", err);
+      cb(err);
+    }
   },
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname);

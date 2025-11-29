@@ -1,6 +1,15 @@
 "use strict";
 import dotenv from "dotenv";
-dotenv.config({ path: "../.env" }); // fuerza a leer el .env desde /backend
+
+// ✅ ES Modules: definir __dirname y __filename
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// ✅ Cargar .env con ruta absoluta robusta (no depende del cwd)
+dotenv.config({ path: join(__dirname, "../.env") });
 
 import cors from "cors";
 import morgan from "morgan";
@@ -25,7 +34,7 @@ async function setupServer() {
 
     app.disable("x-powered-by");
 
-    // Configuración CORS para panel y turista (local + producción)
+    // CORS
     app.use(
       cors({
         credentials: true,
@@ -54,14 +63,14 @@ async function setupServer() {
     app.use(passport.session());
     passportJwtSetup(passport);
 
-    // ✅ Servir archivos estáticos de la carpeta uploads
-    app.use("/uploads", express.static(path.join(__dirname, "../../uploads")));
+    // ✅ Servir archivos estáticos de uploads
+    app.use("/uploads", express.static(join(__dirname, "../../uploads")));
 
     // Rutas
     app.use("/api", indexRoutes);
     app.use("/api/patrimonios", patrimonioRoutes);
 
-    // Conexión a la base de datos
+    // DB
     await connectDB();
     await createUsers();
     await createPatrimonios();
