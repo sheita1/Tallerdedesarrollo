@@ -11,10 +11,11 @@ export const subirImagenPatrimonio = async (req, res) => {
       return res.status(400).json({ error: "No se recibió imagen válida" });
     }
 
-    const rutaRelativa = `patrimonios/${archivo.filename}`;
+    // ✅ Ruta pública completa
+    const rutaPublica = `/uploads/patrimonios/${archivo.filename}`;
 
     console.log("📥 [subirImagenPatrimonio] ID recibido:", id);
-    console.log("📦 [subirImagenPatrimonio] Imagen guardada como:", rutaRelativa);
+    console.log("📦 [subirImagenPatrimonio] Imagen guardada como:", rutaPublica);
 
     const patrimonioRepo = AppDataSource.getRepository(Patrimonio);
     const patrimonio = await patrimonioRepo.findOne({ where: { id: parseInt(id) } });
@@ -23,12 +24,12 @@ export const subirImagenPatrimonio = async (req, res) => {
       return res.status(404).json({ error: "Patrimonio no encontrado" });
     }
 
-    patrimonio.imagen = rutaRelativa;
+    patrimonio.imagen = rutaPublica;
     await patrimonioRepo.save(patrimonio);
 
     res.status(200).json({
       mensaje: "Imagen subida correctamente",
-      imagen: rutaRelativa,
+      imagen: rutaPublica,
     });
   } catch (error) {
     console.error("❌ Error en subirImagenPatrimonio:", error);
@@ -56,9 +57,10 @@ export const subirImagenesPatrimonio = async (req, res) => {
       return res.status(404).json({ error: "Patrimonio no encontrado" });
     }
 
-    const rutasRelativas = archivos.map((archivo) => `patrimonios/${archivo.filename}`);
+    // ✅ Rutas públicas completas
+    const rutasPublicas = archivos.map((archivo) => `/uploads/patrimonios/${archivo.filename}`);
 
-    const registros = rutasRelativas.map((ruta) =>
+    const registros = rutasPublicas.map((ruta) =>
       imagenRepo.create({
         ruta,
         patrimonioId: patrimonio.id,
@@ -68,11 +70,11 @@ export const subirImagenesPatrimonio = async (req, res) => {
     await imagenRepo.save(registros);
 
     console.log("📥 [subirImagenesPatrimonio] ID recibido:", id);
-    console.log("📦 [subirImagenesPatrimonio] Imágenes registradas:", rutasRelativas);
+    console.log("📦 [subirImagenesPatrimonio] Imágenes registradas:", rutasPublicas);
 
     res.status(200).json({
       mensaje: "Imágenes subidas correctamente",
-      imagenes: rutasRelativas,
+      imagenes: rutasPublicas,
     });
   } catch (error) {
     console.error("❌ Error en subirImagenesPatrimonio:", error);

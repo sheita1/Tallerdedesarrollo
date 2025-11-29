@@ -1,40 +1,42 @@
 import { useState } from "react";
 
-function SubirImagenPatrimonio({ patrimonioId }) {
-  const [imagen, setImagen] = useState(null);
+function SubirImagenesPatrimonio({ patrimonioId }) {
+  const [imagenes, setImagenes] = useState([]);
   const [mensaje, setMensaje] = useState("");
-  const [preview, setPreview] = useState(null);
+  const [previews, setPreviews] = useState([]);
 
   const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    console.log("📁 Archivo seleccionado:", file);
+    const files = Array.from(e.target.files);
+    console.log("📁 Archivos seleccionados:", files);
 
-    if (file && file.type === "image/png") {
-      setImagen(file);
-      setPreview(URL.createObjectURL(file));
+    const validFiles = files.filter((file) => file.type === "image/png");
+
+    if (validFiles.length > 0) {
+      setImagenes(validFiles);
+      setPreviews(validFiles.map((file) => URL.createObjectURL(file)));
       setMensaje("");
     } else {
-      setImagen(null);
-      setPreview(null);
+      setImagenes([]);
+      setPreviews([]);
       setMensaje("❌ Solo se permiten imágenes PNG.");
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!imagen) {
-      console.log("⚠️ No hay imagen seleccionada");
+    if (imagenes.length === 0) {
+      console.log("⚠️ No hay imágenes seleccionadas");
       return;
     }
 
     const formData = new FormData();
-    formData.append("imagen", imagen);
+    imagenes.forEach((img) => formData.append("imagenes", img));
 
-    console.log("📤 Enviando imagen para patrimonio ID:", patrimonioId);
+    console.log("📤 Enviando imágenes para patrimonio ID:", patrimonioId);
 
     try {
       const baseURL = import.meta.env.VITE_BASE_URL || "/api";
-      const res = await fetch(`${baseURL}/patrimonios/imagen/${patrimonioId}`, {
+      const res = await fetch(`${baseURL}/patrimonios/imagenes/${patrimonioId}`, {
         method: "POST",
         body: formData,
         credentials: "include",
@@ -44,13 +46,12 @@ function SubirImagenPatrimonio({ patrimonioId }) {
       const data = await res.json();
       console.log("📦 Datos recibidos:", data);
 
-      if (res.ok && data.imagen) {
-        const rutaFinal = `/uploads/${data.imagen.replace(/\\/g, "/")}`;
-        console.log("🖼️ URL pública de imagen:", rutaFinal);
-        setMensaje("✅ Imagen subida correctamente.");
-        setPreview(rutaFinal);
+      if (res.ok && data.imagenes) {
+        // ✅ Ya vienen con /uploads/patrimonios/...
+        setMensaje("✅ Imágenes subidas correctamente.");
+        setPreviews(data.imagenes);
       } else {
-        setMensaje(`❌ Error: ${data.error || "No se pudo subir la imagen."}`);
+        setMensaje(`❌ Error: ${data.error || "No se pudieron subir las imágenes."}`);
       }
     } catch (error) {
       console.error("❌ Error de conexión:", error);
@@ -59,12 +60,13 @@ function SubirImagenPatrimonio({ patrimonioId }) {
   };
 
   return (
-    <div style={{ maxWidth: "400px", margin: "2rem auto", fontFamily: "sans-serif" }}>
-      <h3 style={{ marginBottom: "1rem" }}>📎 Adjuntar imagen PNG</h3>
+    <div style={{ maxWidth: "600px", margin: "2rem auto", fontFamily: "sans-serif" }}>
+      <h3 style={{ marginBottom: "1rem" }}>📎 Adjuntar múltiples imágenes PNG</h3>
       <form onSubmit={handleSubmit}>
         <input
           type="file"
           accept="image/png"
+          multiple
           onChange={handleFileChange}
           style={{
             display: "block",
@@ -76,7 +78,7 @@ function SubirImagenPatrimonio({ patrimonioId }) {
         />
         <button
           type="submit"
-          disabled={!imagen}
+          disabled={imagenes.length === 0}
           style={{
             backgroundColor: "#004080",
             color: "#fff",
@@ -86,20 +88,24 @@ function SubirImagenPatrimonio({ patrimonioId }) {
             cursor: "pointer",
           }}
         >
-          Subir imagen
+          Subir imágenes
         </button>
       </form>
 
       {mensaje && <p style={{ marginTop: "1rem", color: mensaje.includes("✅") ? "green" : "red" }}>{mensaje}</p>}
 
-      {preview && (
+      {previews.length > 0 && (
         <div style={{ marginTop: "1rem" }}>
           <p>📷 Vista previa:</p>
-          <img src={preview} alt="Vista previa" style={{ maxWidth: "100%", borderRadius: "4px" }} />
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem" }}>
+            {previews.map((src, idx) => (
+              <img key={idx} src={src} alt={`Vista previa ${idx}`} style={{ maxWidth: "150px", borderRadius: "4px" }} />
+            ))}
+          </div>
         </div>
       )}
     </div>
   );
 }
 
-export default SubirImagenPatrimonio;
+export default SubirImagenesPatrimonio;
