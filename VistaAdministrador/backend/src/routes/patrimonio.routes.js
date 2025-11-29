@@ -10,7 +10,7 @@ import {
   createPatrimonio,
   getPatrimoniosPublicos,
   getDetallePatrimonio,
-  subirImagenPatrimonio,   // ✅ controlador de subida de imagen principal
+  subirImagenPatrimonio,   // controlador de subida de imagen
 } from "../controllers/patrimonio.controller.js";
 
 const router = Router();
@@ -23,9 +23,9 @@ router
   .delete("/detail/", deletePatrimonio)
   .post("/", createPatrimonio)
 
-  // ✅ Subida de imagen principal (una sola imagen por patrimonio)
-  // Se envía como form-data: campo "imagen" (file) y el id en la URL
+  // ✅ Subida de imagen principal (acepta singular y plural)
   .post("/imagen/:id", upload.single("imagen"), subirImagenPatrimonio)
+  .post("/imagenes/:id", upload.single("imagen"), subirImagenPatrimonio)
 
   // Rutas públicas para turistas
   .get("/public", getPatrimoniosPublicos)

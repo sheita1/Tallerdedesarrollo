@@ -22,9 +22,16 @@ router.get("/", (req, res) => {
 router
   .use("/auth", authRoutes)
   .use("/user", userRoutes)
+
+  // Patrimonios: soporta singular y plural
   .use("/patrimonio", patrimonioRoutes)
   .use("/patrimonios", patrimonioRoutes)
+
+  // Imágenes: soporta acceso directo y bajo patrimonios
   .use("/imagenes", imagenesRoutes)
+  .use("/patrimonios/imagenes", imagenesRoutes)
+
+  // QR
   .use("/qr", qrRoutes);
 
 export default router;
