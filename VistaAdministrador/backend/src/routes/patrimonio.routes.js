@@ -14,43 +14,53 @@ import {
 
 const router = Router();
 
+// CRUD principal
 router
-  // CRUD principal
-  .get("/", getPatrimonios)
-  .get("/detail/", getPatrimonio)
-  .patch("/detail/", updatePatrimonio)
-  .delete("/detail/", deletePatrimonio)
-  .post("/", createPatrimonio)
+  .get("/", getPatrimonios)                     // GET /api/patrimonios/
+  .get("/detail", getPatrimonio)                // GET /api/patrimonios/detail?id=3
+  .patch("/detail", updatePatrimonio)           // PATCH /api/patrimonios/detail
+  .delete("/detail", deletePatrimonio)          // DELETE /api/patrimonios/detail
+  .post("/", createPatrimonio);                 // POST /api/patrimonios/
 
-  // ✅ Subida de imagen con logs
+// Subida de imágenes
+router
   .post("/imagen/:id", upload.single("imagen"), (req, res, next) => {
     console.log("📥 [POST] Subida de imagen para patrimonio ID:", req.params.id);
-    console.log("📦 Body recibido:", req.body);
-    console.log("🖼️ Archivo recibido:", req.file);
-
     if (!req.file) {
-      console.log("⚠️ No se recibió archivo en la petición");
       return res.status(400).json({ message: "No se recibió archivo" });
     }
-
-    // Pasar al controlador real
     subirImagenPatrimonio(req, res, next);
   })
   .post("/imagenes/:id", upload.single("imagen"), (req, res, next) => {
     console.log("📥 [POST] Subida de imagen (plural) para patrimonio ID:", req.params.id);
-    console.log("📦 Body recibido:", req.body);
-    console.log("🖼️ Archivo recibido:", req.file);
-
     if (!req.file) {
-      console.log("⚠️ No se recibió archivo en la petición");
       return res.status(400).json({ message: "No se recibió archivo" });
     }
-
     subirImagenPatrimonio(req, res, next);
-  })
+  });
 
-  // Rutas públicas
-  .get("/public", getPatrimoniosPublicos)
-  .get("/detalle", getDetallePatrimonio);
+// Nueva ruta: obtener imágenes de un patrimonio
+router.get("/imagenes/patrimonio/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    // Aquí deberías consultar BD o carpeta uploads
+    // Ejemplo mínimo:
+    // const imagenes = await ImagenModel.findAll({ where: { patrimonioId: id } });
+    // if (!imagenes.length) return res.status(404).json({ message: "No se encontraron imágenes" });
+
+    return res.json({
+      status: "Success",
+      message: `Imágenes del patrimonio ${id}`,
+      data: [] // reemplaza con tu lógica real
+    });
+  } catch (err) {
+    return res.status(500).json({ message: "Error interno", error: err.message });
+  }
+});
+
+// Rutas públicas
+router
+  .get("/public", getPatrimoniosPublicos)       // GET /api/patrimonios/public
+  .get("/detalle", getDetallePatrimonio);       // GET /api/patrimonios/detalle
 
 export default router;
