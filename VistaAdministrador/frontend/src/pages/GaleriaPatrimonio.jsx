@@ -9,7 +9,7 @@ function GaleriaPatrimonio({ patrimonioId }) {
   const [archivo, setArchivo] = useState(null);
   const [nombrePatrimonio, setNombrePatrimonio] = useState("");
 
-  // 🚨 CONFIGURACIÓN: Puerto 1556 (Docker externo)
+  // 🚨 CONFIGURACIÓN: Puerto 1556
   const URL_BACKEND = "http://146.83.198.35:1556";
 
   // Función para construir la URL correctamente
@@ -17,11 +17,11 @@ function GaleriaPatrimonio({ patrimonioId }) {
     const nombreArchivo = img.fileName || img.ruta || img.url;
     if (!nombreArchivo) return "";
     
-    // Si la imagen ya tiene http, la devolvemos
     if (nombreArchivo.startsWith("http")) return nombreArchivo;
 
-    // Construimos la ruta: Backend + /uploads/patrimonios/ + archivo
-    return `${URL_BACKEND}/uploads/patrimonios/${nombreArchivo}`;
+    // 🚨 CAMBIO CRÍTICO: Usamos la ruta de emergencia del backend
+    // Formato: http://IP:PORT/imagen-emergencia/nombre_del_archivo.png
+    return `${URL_BACKEND}/imagen-emergencia/${nombreArchivo}`; 
   };
 
   // Cargar imágenes

@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 // ✅ ES Modules: definir __dirname y __filename
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
+import fs from "fs"; // 🚨 Necesario para la ruta de emergencia
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -58,11 +59,23 @@ async function setupServer() {
     passportJwtSetup(passport);
 
     // -----------------------------------------------------------------
-    // 🚨 CORRECCIÓN DEFINITIVA DE IMÁGENES 🚨
-    // Usamos la ruta ABSOLUTA de Docker (/app/uploads)
-    // Esto conecta la URL "/uploads" directamente al Volumen de Docker.
+    // 🚨 RUTA MANUAL DE EMERGENCIA (Reemplazo de express.static) 🚨
+    // Servimos la imagen leyendo el archivo directamente del volumen de Docker.
     // -----------------------------------------------------------------
-    app.use("/uploads", express.static("/app/uploads"));
+    app.get('/imagen-emergencia/:filename', (req, res) => {
+        const filename = req.params.filename;
+        
+        // ⚠️ Ruta ABSOLUTA en el contenedor donde se montó el volumen.
+        const filePath = join('/app/uploads/patrimonios', filename); 
+
+        // Usamos res.sendFile para entregar el archivo
+        res.sendFile(filePath, (err) => {
+            if (err) {
+                console.error(`💥 Error 404: Archivo no encontrado en ${filePath}`, err);
+                res.status(404).send("Imagen no encontrada en el disco.");
+            }
+        });
+    });
 
 
     // --- FRONTENDS ESTÁTICOS ---
