@@ -71,8 +71,16 @@ function GaleriaPatrimonio({ patrimonioId }) {
       const res = await instance.post(`/patrimonios/imagenes/${patrimonioId}`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
+      
       const respuesta = res.data; 
-      const imagenNueva = respuesta.data || respuesta; 
+      let imagenNueva = respuesta.data || respuesta; 
+      
+      // 💡 CORRECCIÓN CRÍTICA: Aseguramos que el objeto tenga un ID
+      // Esto resuelve el error "Imagen undefined"
+      if (imagenNueva && !imagenNueva.id) {
+        imagenNueva.id = Date.now(); // ID temporal para que React no falle
+      }
+
       const nuevas = Array.isArray(imagenNueva) ? imagenNueva : [imagenNueva];
       setImagenes((prev) => [...prev, ...nuevas]);
       setArchivo(null);
@@ -96,7 +104,7 @@ function GaleriaPatrimonio({ patrimonioId }) {
         <div className="galeria-grid">
           {imagenes.map((img) => (
             <div key={img.id} className="galeria-item">
-              {/* 🚨 MODIFICACIÓN: Eliminamos el onError para ver el error 404/ícono */}
+              {/* 🚨 Eliminamos el onError para ver el error real del navegador */}
               <img
                 src={getImagenUrl(img)}
                 alt={`Imagen ${img.id}`}
@@ -112,7 +120,7 @@ function GaleriaPatrimonio({ patrimonioId }) {
 
       {imagenAmpliada && (
         <div className="galeria-overlay" onClick={() => setImagenAmpliada(null)}>
-          {/* 🚨 MODIFICACIÓN: Eliminamos el onError aquí también */}
+          {/* Eliminamos el onError aquí también */}
           <img
             src={getImagenUrl(imagenAmpliada)}
             alt="Imagen ampliada"
