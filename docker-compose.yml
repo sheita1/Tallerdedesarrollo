@@ -1,0 +1,47 @@
+version: '3.8'
+name: tallerdedesarrollo 
+
+services:
+  # 1. SERVICIO DE BASE DE DATOS (PostgreSQL)
+  database:
+    image: postgres:14-alpine
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - db_data:/var/lib/postgresql/data 
+    networks:
+      - tesis_network
+    restart: always
+
+  # 2. SERVICIO DE APLICACIÓN COMPLETA (Backend + 2 Frontends)
+  aplicacion:
+    build:
+      context: . 
+      dockerfile: VistaAdministrador/Dockerfile
+    ports:
+      - "1556:1556" 
+    environment:
+      DB_HOST: database 
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      PORT: 1556
+    depends_on:
+      - database
+    networks:
+      - tesis_network
+    # 🚨 CRÍTICO: Mapeo de volumen para la persistencia de imágenes 
+    volumes:
+      # Mapea la carpeta 'uploads' (en la raíz) a la ruta interna del backend.
+      - ./uploads:/app/uploads 
+    restart: always
+
+# REDES Y VOLÚMENES
+networks:
+  tesis_network:
+    driver: bridge 
+
+volumes:
+  db_data:

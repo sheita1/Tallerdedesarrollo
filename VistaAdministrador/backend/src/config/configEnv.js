@@ -34,13 +34,3 @@ if (!DB_HOST || !DB_USER || !DB_PASSWORD || !DB_NAME) {
   process.exit(1);
 }
 
-// Log de configuración (sin mostrar datos sensibles)
-console.log("✅ Configuración de entorno:");
-console.log("   DB_HOST:", DB_HOST);
-console.log("   DB_NAME:", DB_NAME);
-console.log("   DB_USER:", DB_USER);
-console.log("   DB_PASSWORD:", DB_PASSWORD ? "********" : "NO DEFINIDA");
-console.log("   JWT_SECRET:", ACCESS_TOKEN_SECRET ? "********" : "NO DEFINIDA");
-console.log("   COOKIE_KEY:", cookieKey ? "********" : "NO DEFINIDA");
-console.log("   NODE_ENV:", NODE_ENV);
-

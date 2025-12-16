@@ -41,8 +41,8 @@ async function setupServer() {
         origin: [
           "http://localhost:5173",
           "http://localhost:8080",
-          "http://146.83.198.35:1555", // Apache HTTP
-          "https://146.83.198.35:1556", // Apache HTTPS
+          "http://146.83.198.35:1555",
+          "https://146.83.198.35:1556",
         ],
       })
     );
@@ -66,7 +66,31 @@ async function setupServer() {
     // ✅ Servir archivos estáticos de uploads
     app.use("/uploads", express.static(join(__dirname, "../../uploads")));
 
-    // Rutas
+    // --- 🚨 INICIO: CONFIGURACIÓN PARA SERVIR FRONTENDS ESTÁTICOS (CRÍTICO) 🚨 ---
+    
+    // 1. Servir Frontend Administrador (URL: /admin)
+    app.use(
+      '/admin', 
+      express.static(join(__dirname, '..', 'public', 'admin'))
+    );
+    // Para el ruteo interno de React (SPA)
+    app.get('/admin/*', (req, res) => {
+      res.sendFile(join(__dirname, '..', 'public', 'admin', 'index.html'));
+    });
+
+    // 2. Servir Frontend Turista (URL: /turista)
+    app.use(
+      '/turista', 
+      express.static(join(__dirname, '..', 'public', 'turista'))
+    );
+    // Para el ruteo interno de React (SPA)
+    app.get('/turista/*', (req, res) => {
+      res.sendFile(join(__dirname, '..', 'public', 'turista', 'index.html'));
+    });
+
+    // --- 🚨 FIN: BLOQUE DE CÓDIGO AÑADIDO (CRÍTICO) 🚨 ---
+
+    // Rutas API
     app.use("/api", indexRoutes);
     app.use("/api/patrimonios", patrimonioRoutes);
 
@@ -76,7 +100,7 @@ async function setupServer() {
     await createPatrimonios();
 
     // Servidor
-    const port = PORT || 4001; // 👈 aseguramos que si PORT no está definido, use 4001
+    const port = PORT || 4001;
     app.listen(port, () => {
       console.log(`🚀 Servidor backend corriendo en ${HOST}:${port}`);
     });

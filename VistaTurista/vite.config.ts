@@ -3,27 +3,10 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 
 export default defineConfig(({ mode }) => ({
-  server: {
-    host: true,        // ✅ permite acceso desde celular
-    port: 8080,        // ✅ puerto del turista
-    proxy: {
-      "/api": {
-        target: "http://localhost:3000", // ✅ backend real
-        changeOrigin: true,
-        secure: false,
-      },
-      "/patrimonios": {
-        target: "http://localhost:3000", // ✅ imágenes de patrimonios
-        changeOrigin: true,
-        secure: false,
-      },
-      "/uploads": {
-        target: "http://localhost:3000", // ✅ imágenes generales
-        changeOrigin: true,
-        secure: false,
-      },
-    },
-  },
+  // 🚨 CRÍTICO: Esto le dice a Vite que añada '/turista/' a todos los estilos y scripts.
+  // Sin esto, el navegador busca en la raíz y falla con el error MIME type.
+  base: "/turista/",
+
   plugins: [
     react(),
   ],
@@ -32,4 +15,6 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  // Nota: La sección 'server' se ignora en Docker (production build),
+  // así que la he quitado para limpiar, ya que Express maneja el ruteo ahora.
 }));

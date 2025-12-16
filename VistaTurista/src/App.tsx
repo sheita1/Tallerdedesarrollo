@@ -7,7 +7,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 
 import Index from "./pages/Index";
 import DetallePatrimonio from "./pages/DetallePatrimonio";
-import Contacto from "./pages/Contacto"; // ✅ importa tu nueva página
+import Contacto from "./pages/Contacto"; 
 
 const queryClient = new QueryClient();
 
@@ -16,7 +16,8 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
+      {/* 🚨 AQUÍ ESTÁ LA SOLUCIÓN: Agregamos basename="/turista" */}
+      <BrowserRouter basename="/turista">
         <Routes>
           {/* Home */}
           <Route path="/" element={<Index />} />
