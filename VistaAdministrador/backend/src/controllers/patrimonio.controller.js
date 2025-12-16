@@ -20,10 +20,10 @@ import {
 } from "../handlers/responseHandlers.js";
 
 import { AppDataSource } from "../config/configDb.js";
+// 🛑 IMPORTACIÓN NECESARIA PARA LA GALERÍA 🛑
+import PatrimonioImagen from "../entity/PatrimonioImagen.js"; 
 
 const patrimonioRepo = AppDataSource.getRepository("Patrimonio");
-// 🚨 Nota: Si usas una tabla separada para imágenes, necesitarías su repositorio aquí también.
-// const imagenRepo = AppDataSource.getRepository("PatrimonioImagen");
 
 // ---------------------------------------------------
 // 1. OBTENER UN PATRIMONIO (CON LINK QR DINÁMICO)
@@ -219,6 +219,7 @@ export async function getDetallePatrimonio(req, res) {
       return handleErrorClient(res, 404, "Patrimonio no encontrado o no visible");
     }
 
+    // ASUMO que la entidad PatrimonioImagen usa 'patrimonioId'
     const imagenes = await imagenRepo.find({ where: { patrimonioId: patrimonio.id } });
     console.log("📸 [GET Detalle Patrimonio] Imágenes encontradas:", imagenes);
 
@@ -240,7 +241,7 @@ export async function getDetallePatrimonio(req, res) {
 }
 
 // ---------------------------------------------------
-// 2. SUBIDA DE IMAGEN CORREGIDA Y CON LOGS MÁXIMOS
+// 2. SUBIDA DE IMAGEN (CORREGIDA PARA GALERÍA Y RESPUESTA)
 // ---------------------------------------------------
 export async function subirImagenPatrimonio(req, res) {
   try {
@@ -264,9 +265,8 @@ export async function subirImagenPatrimonio(req, res) {
       size: req.file.size
     }, null, 2));
 
-    // ✅ FIX: Guardamos la ruta relativa completa que usará el frontend/cliente
+    // ✅ Ruta relativa completa que usará el frontend/cliente
     const fileName = req.file.filename;
-    // Usamos la ruta completa relativa al puerto (http://ip:1556)
     const rutaParaDB = `/uploads/patrimonios/${fileName}`; 
 
     console.log("🖼️ [UPLOAD Imagen] Ruta para guardar en la DB:", rutaParaDB);
@@ -282,24 +282,36 @@ export async function subirImagenPatrimonio(req, res) {
       return handleErrorClient(res, 404, "Patrimonio no encontrado");
     }
     
-    // 🚩 LOG CRÍTICO 3: Intento de Actualización
-    console.log(`🔄 [UPLOAD Imagen] Intentando actualizar Patrimonio ${patrimonioId} con imagen: ${rutaParaDB}`);
-    // NOTA: Aquí solo actualiza el campo 'imagen' del Patrimonio. Si usas una tabla PatrimonioImagen, debes ajustar esto.
+    // ----------------------------------------------------------------------------------
+    // 🛑 CORRECCIONES DE PERSISTENCIA Y GALERÍA 🛑
+    // ----------------------------------------------------------------------------------
+    const imagenRepo = AppDataSource.getRepository(PatrimonioImagen);
+
+    // 1. Actualizar la imagen destacada (campo 'imagen')
     const result = await patrimonioRepo.update({ id: patrimonioId }, { imagen: rutaParaDB });
     
     if (result.affected === 0) {
-      console.error("❌ [UPLOAD Imagen] Fallo al actualizar la fila en la DB. Fila no afectada.");
+      console.error("❌ [UPLOAD Imagen] Fallo al actualizar la imagen destacada.");
     }
 
-    const patrimonioActualizado = await patrimonioRepo.findOneBy({ id: patrimonioId });
-    console.log("✅ [UPLOAD Imagen] Patrimonio actualizado, resultado final:", patrimonioActualizado);
+    // 2. Insertar la imagen en la tabla de Galería (PatrimonioImagen)
+    const nuevaImagenGaleria = imagenRepo.create({
+      ruta: rutaParaDB,
+      patrimonioId: patrimonioId,
+      // ASUMO que el campo 'id' se genera automáticamente
+    });
+    await imagenRepo.save(nuevaImagenGaleria);
+    console.log("📸 [UPLOAD Imagen] Imagen persistida en la Galería con ID:", nuevaImagenGaleria.id);
+
+    // ----------------------------------------------------------------------------------
 
     // Respuesta con datos completos para facilitar el debug en el frontend
+    // ✅ CORRECCIÓN DE RESPUESTA: Devolver el objeto con el ID y la ruta que el frontend espera
     handleSuccess(res, 200, "Imagen subida correctamente", {
-      patrimonioId,
-      fileName,
-      imagen: rutaParaDB, // Ruta completa
-      patrimonio: patrimonioActualizado,
+      // El Frontend necesita un ID real y la clave 'ruta' para que la galería funcione
+      id: nuevaImagenGaleria.id, 
+      ruta: rutaParaDB,
+      patrimonioId: patrimonioId,
     });
   } catch (error) {
     console.error("💥 [UPLOAD Imagen] Error:", error);
