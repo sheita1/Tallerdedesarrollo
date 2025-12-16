@@ -9,9 +9,13 @@ function GaleriaPatrimonio({ patrimonioId }) {
   const [archivo, setArchivo] = useState(null);
   const [nombrePatrimonio, setNombrePatrimonio] = useState("");
 
+  // ⚠️ CONFIGURACIÓN: URL directa del backend (IP y Puerto 1555)
+  // Si cambias de servidor, solo actualiza esta línea.
+  const URL_BACKEND = "http://146.83.198.35:1555";
+
   // Cargar imágenes
   useEffect(() => {
-    instance.get(`/patrimonios/imagenes/patrimonio/${patrimonioId}`) // 🔧 Corrección aquí
+    instance.get(`/patrimonios/imagenes/patrimonio/${patrimonioId}`)
       .then((res) => {
         const data = res.data;
         setImagenes(Array.isArray(data) ? data : []);
@@ -52,7 +56,7 @@ function GaleriaPatrimonio({ patrimonioId }) {
     if (!archivo) return;
 
     const formData = new FormData();
-    formData.append("imagen", archivo); // 🔧 asegúrate que coincida con backend
+    formData.append("imagen", archivo);
 
     try {
       const res = await instance.post(`/patrimonios/imagenes/${patrimonioId}`, formData, {
@@ -60,6 +64,7 @@ function GaleriaPatrimonio({ patrimonioId }) {
       });
 
       const respuesta = res.data;
+      // Ajuste por si el backend devuelve un objeto único o un array
       const nuevas = Array.isArray(respuesta) ? respuesta : [respuesta];
       setImagenes((prev) => [...prev, ...nuevas]);
       setArchivo(null);
@@ -87,8 +92,9 @@ function GaleriaPatrimonio({ patrimonioId }) {
         <div className="galeria-grid">
           {imagenes.map((img) => (
             <div key={img.id} className="galeria-item">
+              {/* CORRECCIÓN: Usamos URL_BACKEND en lugar de /api/ */}
               <img
-                src={`/api/${img.ruta}`}
+                src={`${URL_BACKEND}/${img.ruta}`}
                 alt={`Imagen ${img.id}`}
                 onClick={() => setImagenAmpliada(img)}
               />
@@ -102,8 +108,9 @@ function GaleriaPatrimonio({ patrimonioId }) {
 
       {imagenAmpliada && (
         <div className="galeria-overlay" onClick={() => setImagenAmpliada(null)}>
+          {/* CORRECCIÓN: Usamos URL_BACKEND también aquí */}
           <img
-            src={`/api/${imagenAmpliada.ruta}`}
+            src={`${URL_BACKEND}/${imagenAmpliada.ruta}`}
             alt="Imagen ampliada"
             className="galeria-ampliada"
           />
