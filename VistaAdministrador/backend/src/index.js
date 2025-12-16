@@ -6,7 +6,7 @@ import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 import fs from "fs"; 
 import mime from "mime-types"; 
-import path from "path"; // 🚨 Agregado 'path' para usar path.join() en la ruta estática
+import path from "path"; // Necesario para la manipulación de rutas
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -29,7 +29,6 @@ import { passportJwtSetup } from "./auth/passport.auth.js";
 // Rutas
 import indexRoutes from "./routes/index.routes.js";
 import patrimonioRoutes from "./routes/patrimonio.routes.js";
-// 🚨 Nota: Asegúrate de importar tu ruta de imagen si usas una (ej. imagenRoutes)
 
 async function setupServer() {
   try {
@@ -61,41 +60,43 @@ async function setupServer() {
     app.use(passport.session());
     passportJwtSetup(passport);
 
+    // 🛑 ATENCIÓN: Las dos rutas anteriores (imagen-emergencia y express.static)
+    // 🛑 Se reemplazan por esta única ruta dinámica para evitar el conflicto 404.
+    
     // -----------------------------------------------------------------
-    // 🚨 RUTA MANUAL DE EMERGENCIA (Debe ir primero para prueba directa)
+    // ✅ SOLUCIÓN FINAL DINÁMICA: Captura explícitamente /uploads/...
+    // Esto tiene mayor prioridad que la mayoría de los middlewares de error 404
     // -----------------------------------------------------------------
-    app.get('/imagen-emergencia/:filename', (req, res) => {
-        const filename = req.params.filename;
+    app.get('/uploads/:subcarpeta/:filename', (req, res) => {
+        const { subcarpeta, filename } = req.params;
         
-        // ⚠️ CRÍTICO: Concatenación simple de strings (SIN USAR 'join')
-        const filePath = '/app/uploads/patrimonios/' + filename; 
-
+        // Ruta física dentro del contenedor: /app/uploads/patrimonios/nombre.png
+        const rutaAbsoluta = path.join("/app/uploads", subcarpeta, filename);
+        
+        console.log(`📥 [GET UPLOADS CATCH] Solicitud de archivo: ${subcarpeta}/${filename}`);
+        
         // 1. Verificación de existencia
-        if (!fs.existsSync(filePath)) {
-            console.error(`💥 ERROR FATAL 404: Archivo no encontrado en ${filePath}`);
-            return res.status(404).send("Imagen no encontrada en el disco.");
-        }
-
-        // 2. Forzar el tipo MIME
-        const mimeType = mime.lookup(filePath);
-        if (mimeType) {
-            res.setHeader('Content-Type', mimeType);
-        }
-
-        // 3. Servir el archivo
-        res.sendFile(filePath, (err) => {
-            if (err) {
-                console.error(`💥 Error al enviar archivo:`, err);
-                res.status(500).send("Error interno al enviar la imagen.");
+        if (fs.existsSync(rutaAbsoluta)) {
+            console.log(`✅ [GET UPLOADS CATCH] Archivo encontrado y enviado: ${rutaAbsoluta}`);
+            
+            // 2. Forzar el tipo MIME
+            const mimeType = mime.lookup(rutaAbsoluta);
+            if (mimeType) {
+                res.setHeader('Content-Type', mimeType);
             }
-        });
+
+            // 3. Servir el archivo
+            return res.sendFile(rutaAbsoluta, (err) => {
+                if (err) {
+                    console.error(`💥 Error al enviar archivo:`, err);
+                    res.status(500).send("Error interno al enviar la imagen.");
+                }
+            });
+        } else {
+            console.log(`❌ [GET UPLOADS CATCH] Archivo no encontrado en el disco: ${rutaAbsoluta}`);
+            res.status(404).send("Archivo físico no encontrado en el disco (404).");
+        }
     });
-
-
-    // 🛑 SOLUCIÓN CRÍTICA 🛑
-    // Mapea la URL '/uploads/' (guardada en la DB) al directorio físico 'uploads' dentro del contenedor.
-    app.use('/uploads', express.static(path.join(process.cwd(), 'uploads'))); 
-    console.log(`🖼️ Servidor de archivos estático configurado: /uploads -> ${path.join(process.cwd(), 'uploads')}`);
 
 
     // --- FRONTENDS ESTÁTICOS ---
