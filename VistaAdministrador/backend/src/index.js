@@ -34,7 +34,6 @@ async function setupServer() {
     app.disable("x-powered-by");
 
     // ✅ CORS MEJORADO (Universal)
-    // Esto permite que funcione en localhost Y en la IP de la U sin cambiar nada
     app.use(
       cors({
         credentials: true,
@@ -60,6 +59,14 @@ async function setupServer() {
 
     // ✅ Servir archivos estáticos de uploads
     app.use("/uploads", express.static(join(__dirname, "../../uploads")));
+    
+    // 💡 CORRECCIÓN CRÍTICA: Servir la subcarpeta /uploads/patrimonios
+    // Express ahora buscará en uploads/patrimonios cuando se acceda a /uploads/patrimonios
+    app.use(
+        "/uploads/patrimonios", 
+        express.static(join(__dirname, "../../uploads/patrimonios"))
+    );
+
 
     // --- FRONTENDS ESTÁTICOS ---
     
@@ -76,14 +83,13 @@ async function setupServer() {
     });
 
     // --- 🚨 RUTAS API (RESTAURADAS) 🚨 ---
-    // Volvemos a poner "/api" porque tu Frontend lo necesita para encontrar los datos
     app.use("/api", indexRoutes);
     app.use("/api/patrimonios", patrimonioRoutes);
 
     // DB
     await connectDB();
-    await createUsers(); // Esto recreará al admin si se borró
-    await createPatrimonios(); // Esto recreará patrimonios base si se borraron
+    await createUsers(); 
+    await createPatrimonios(); 
 
     // Servidor
     const port = PORT || 4001;
