@@ -4,7 +4,8 @@ import dotenv from "dotenv";
 // ✅ ES Modules: definir __dirname y __filename
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
-import fs from "fs"; // 🚨 Necesario para la ruta de emergencia
+import fs from "fs"; // Necesario para la ruta de emergencia
+import mime from "mime-types"; // 💡 Nuevo: Para asegurar el tipo MIME
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -59,20 +60,31 @@ async function setupServer() {
     passportJwtSetup(passport);
 
     // -----------------------------------------------------------------
-    // 🚨 RUTA MANUAL DE EMERGENCIA (Reemplazo de express.static) 🚨
-    // Servimos la imagen leyendo el archivo directamente del volumen de Docker.
+    // 🚨 RUTA MANUAL DE EMERGENCIA (Aseguramos la ruta y el Content-Type) 🚨
     // -----------------------------------------------------------------
     app.get('/imagen-emergencia/:filename', (req, res) => {
         const filename = req.params.filename;
         
-        // ⚠️ Ruta ABSOLUTA en el contenedor donde se montó el volumen.
+        // La ruta verificada que funciona dentro del contenedor
         const filePath = join('/app/uploads/patrimonios', filename); 
+
+        // 💡 Nuevo: Usar fs.existsSync para verificación
+        if (!fs.existsSync(filePath)) {
+            console.error(`💥 Error 404: Archivo no encontrado en ${filePath}`);
+            return res.status(404).send("Imagen no encontrada en el disco.");
+        }
+
+        // 💡 Nuevo: Forzar el tipo MIME
+        const mimeType = mime.lookup(filePath);
+        if (mimeType) {
+            res.setHeader('Content-Type', mimeType);
+        }
 
         // Usamos res.sendFile para entregar el archivo
         res.sendFile(filePath, (err) => {
             if (err) {
-                console.error(`💥 Error 404: Archivo no encontrado en ${filePath}`, err);
-                res.status(404).send("Imagen no encontrada en el disco.");
+                console.error(`💥 Error al enviar archivo:`, err);
+                res.status(500).send("Error interno al enviar la imagen.");
             }
         });
     });

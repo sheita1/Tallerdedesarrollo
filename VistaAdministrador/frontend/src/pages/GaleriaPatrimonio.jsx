@@ -19,8 +19,7 @@ function GaleriaPatrimonio({ patrimonioId }) {
     
     if (nombreArchivo.startsWith("http")) return nombreArchivo;
 
-    // 🚨 CAMBIO CRÍTICO: Usamos la ruta de emergencia del backend
-    // Formato: http://IP:PORT/imagen-emergencia/nombre_del_archivo.png
+    // 🚨 Usamos la ruta de emergencia del backend
     return `${URL_BACKEND}/imagen-emergencia/${nombreArchivo}`; 
   };
 
