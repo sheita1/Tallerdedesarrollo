@@ -4,6 +4,22 @@ import { QRCodeCanvas } from "qrcode.react";
 const QrConLogo = ({ url, logo }) => {
   const canvasRef = useRef(null);
 
+  // ✅ FIX: Extraemos el ID y forzamos la ruta "/turista/patrimonio/"
+  let urlFinal = url;
+  try {
+    // 1. Obtenemos el ID (asumimos que es lo último de la URL recibida)
+    // Ej: si llega ".../patrimonio/5", el split saca el "5"
+    const partes = url.split('/');
+    const id = partes[partes.length - 1]; // Tomamos el último trozo (el ID)
+
+    // 2. Si el ID es válido, armamos la URL correcta
+    if (id && !isNaN(parseInt(id))) {
+        urlFinal = `${window.location.origin}/turista/patrimonio/${id}`;
+    }
+  } catch (e) {
+    console.log("Error reconstruyendo URL, usando original");
+  }
+
   const descargarQR = () => {
     const canvas = canvasRef.current.querySelector("canvas");
     const enlace = document.createElement("a");
@@ -24,7 +40,7 @@ const QrConLogo = ({ url, logo }) => {
         }}
       >
         <QRCodeCanvas
-          value={url}
+          value={urlFinal} // ✅ URL Corregida
           size={200}
           bgColor="#ffffff"
           fgColor="#000000"
@@ -32,7 +48,6 @@ const QrConLogo = ({ url, logo }) => {
           includeMargin={true}
         />
 
-        {}
         <img
           src={logo}
           alt="logo"
@@ -48,13 +63,17 @@ const QrConLogo = ({ url, logo }) => {
         />
       </div>
 
-      {}
       <button
         onClick={descargarQR}
         className="bg-[#2A624C] text-white px-4 py-2 rounded hover:bg-[#24523f]"
       >
         Descargar QR
       </button>
+      
+      {/* Puedes borrar esto luego, es para verificar visualmente */}
+      <p style={{fontSize: "10px", color: "#666", marginTop: "5px"}}>
+        Link QR: {urlFinal}
+      </p>
     </div>
   );
 };

@@ -1,11 +1,14 @@
 import { QRCodeCanvas } from "qrcode.react";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
-import { TOURISTA_BASE_URL } from "../config/touristaBaseUrl";
 
 function QRInstitucional({ id, nombre, logo }) {
   
-  const url = `${TOURISTA_BASE_URL}/patrimonio/${id}`;
+  // ✅ FIX: Ruta correcta (/turista/patrimonio/ID) y Origen Dinámico
+  const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+  
+  // AQUÍ ESTABA EL ERROR DE RUTA:
+  const url = `${baseUrl}/turista/patrimonio/${id}`;
 
   const descargarPDF = async () => {
     const elemento = document.getElementById(`qr-institucional-${id}`);
@@ -42,34 +45,26 @@ function QRInstitucional({ id, nombre, logo }) {
           fontFamily: "Arial",
         }}
       >
-        {/* Logo */}
         <img
           src={logo}
           alt="Logo municipal"
           style={{ width: "90px", marginBottom: "10px" }}
         />
-
-        {/* Título */}
         <h2 style={{ margin: "0", color: "#003366" }}>
           Patrimonio #{id}
         </h2>
-
-        {/* Nombre */}
         <p style={{ fontSize: "18px", marginTop: "5px" }}>
           <strong>{nombre}</strong>
         </p>
 
-        {/* QR con logo */}
         <div style={{ position: "relative", display: "inline-block" }}>
           <QRCodeCanvas
             id={`qr-canvas-${id}`}
-            value={url}
+            value={url} 
             size={260}
             includeMargin={true}
             style={{ borderRadius: "8px" }}
           />
-
-          {/* Logo centrado dentro del QR */}
           <img
             src={logo}
             alt="logo"
@@ -84,14 +79,11 @@ function QRInstitucional({ id, nombre, logo }) {
             }}
           />
         </div>
-
-        {/* Pie de página */}
         <p style={{ marginTop: "15px", fontSize: "14px", color: "#444" }}>
           Escanea este código para ver la información completa del patrimonio.
         </p>
       </div>
 
-      {/* Botón descargar */}
       <button
         onClick={descargarPDF}
         style={{

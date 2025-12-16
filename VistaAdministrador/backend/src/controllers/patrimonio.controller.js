@@ -23,7 +23,9 @@ import { AppDataSource } from "../config/configDb.js";
 
 const patrimonioRepo = AppDataSource.getRepository("Patrimonio");
 
-// Obtener un patrimonio por ID o nombre
+// ---------------------------------------------------
+// 1. OBTENER UN PATRIMONIO (CON LINK QR DINÁMICO)
+// ---------------------------------------------------
 export async function getPatrimonio(req, res) {
   try {
     console.log("📥 [GET Patrimonio] Query:", req.query);
@@ -37,7 +39,19 @@ export async function getPatrimonio(req, res) {
 
     if (errorPatrimonio) return handleErrorClient(res, 404, errorPatrimonio);
 
-    handleSuccess(res, 200, "Patrimonio encontrado", patrimonio);
+    // ✅ MAGIA QR: Detectamos protocolo y host automáticamente
+    const protocol = req.protocol; // 'http' o 'https'
+    const host = req.get("host");  // 'localhost:1556' o '146.83.x.x:8080'
+    
+    // Generamos la URL que el Turista usará (ajusta '/ver/' si tu ruta frontend es distinta)
+    const urlParaQR = `${protocol}://${host}/ver/${patrimonio.id}`;
+
+    // Enviamos el patrimonio + el link generado
+    handleSuccess(res, 200, "Patrimonio encontrado", {
+      ...patrimonio,
+      linkQR: urlParaQR // <--- El Frontend usa esto para <QRCode value={data.linkQR} />
+    });
+
   } catch (error) {
     console.error("💥 [GET Patrimonio] Error:", error);
     handleErrorServer(res, 500, error.message);
@@ -223,59 +237,45 @@ export async function getDetallePatrimonio(req, res) {
   }
 }
 
-// Subida de imagen principal con logs detallados
+// ---------------------------------------------------
+// 2. SUBIDA DE IMAGEN CORREGIDA (RUTA COMPLETA)
+// ---------------------------------------------------
 export async function subirImagenPatrimonio(req, res) {
   try {
     console.log("📥 [UPLOAD Imagen] Params:", req.params);
-    console.log("📥 [UPLOAD Imagen] Body:", req.body);
-    console.log("📥 [UPLOAD Imagen] File:", req.file);
-
+    
     const { id } = req.params;
-    if (!id) {
-      console.log("⚠️ [UPLOAD Imagen] Falta ID de patrimonio en params");
-      return handleErrorClient(res, 400, "Falta ID de patrimonio");
-    }
-    if (!req.file) {
-      console.log("⚠️ [UPLOAD Imagen] No se recibió archivo en la petición");
-      return handleErrorClient(res, 400, "No se recibió archivo de imagen");
-    }
+    if (!id) return handleErrorClient(res, 400, "Falta ID de patrimonio");
+    if (!req.file) return handleErrorClient(res, 400, "No se recibió archivo");
 
-    // Nombre del archivo que multer guardó en /uploads
+    // ✅ FIX: Guardamos la ruta completa /uploads/patrimonios/archivo.jpg
     const fileName = req.file.filename;
-    const filePath = req.file.path; // ruta absoluta/relativa según tu multer
-    const destDir = "uploads"; // carpeta base
-    console.log("🖼️ [UPLOAD Imagen] Archivo recibido:", { fileName, filePath, destDir });
+    const rutaFinal = `/uploads/patrimonios/${fileName}`;
+    const destDir = "uploads";
 
-    // Verificar que el patrimonio existe antes de actualizar
+    console.log("🖼️ [UPLOAD Imagen] Guardando ruta:", rutaFinal);
+
     const patrimonioId = parseInt(id);
     const patrimonioExistente = await patrimonioRepo.findOneBy({ id: patrimonioId });
-    console.log("🔎 [UPLOAD Imagen] Patrimonio existente:", patrimonioExistente);
 
     if (!patrimonioExistente) {
-      console.log("⚠️ [UPLOAD Imagen] Patrimonio no existe en BD");
       return handleErrorClient(res, 404, "Patrimonio no encontrado");
     }
 
-    // Actualizar el campo 'imagen' del patrimonio con el nombre del archivo
-    const resultUpdate = await patrimonioRepo.update(
-      { id: patrimonioId },
-      { imagen: fileName }
-    );
-    console.log("🟢 [UPLOAD Imagen] Resultado update Patrimonio:", resultUpdate);
+    // Actualizamos la BD con la ruta completa
+    await patrimonioRepo.update({ id: patrimonioId }, { imagen: rutaFinal });
 
-    // Confirmación de escritura
     const patrimonioActualizado = await patrimonioRepo.findOneBy({ id: patrimonioId });
     console.log("✅ [UPLOAD Imagen] Patrimonio actualizado:", patrimonioActualizado);
 
-    // Respuesta final
+    // Respuesta con datos completos para evitar errores 'undefined' en frontend
     handleSuccess(res, 200, "Imagen subida correctamente", {
       patrimonioId,
       fileName,
+      imagen: rutaFinal, // Para que el frontend la encuentre fácil
+      url: rutaFinal,    // Alternativa
       storedAt: destDir,
-      patrimonio: {
-        id: patrimonioActualizado?.id,
-        imagen: patrimonioActualizado?.imagen,
-      },
+      patrimonio: patrimonioActualizado,
     });
   } catch (error) {
     console.error("💥 [UPLOAD Imagen] Error:", error);

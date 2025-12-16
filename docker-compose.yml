@@ -1,8 +1,8 @@
 version: '3.8'
-name: tallerdedesarrollo 
+name: tallerdedesarrollo
 
 services:
-  # 1. SERVICIO DE BASE DE DATOS (PostgreSQL)
+  # 1. SERVICIO DE BASE DE DATOS
   database:
     image: postgres:14-alpine
     environment:
@@ -10,20 +10,20 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
     volumes:
-      - db_data:/var/lib/postgresql/data 
+      - db_data:/var/lib/postgresql/data
     networks:
       - tesis_network
     restart: always
 
-  # 2. SERVICIO DE APLICACIÓN COMPLETA (Backend + 2 Frontends)
+  # 2. SERVICIO DE APLICACIÓN
   aplicacion:
     build:
-      context: . 
+      context: .
       dockerfile: VistaAdministrador/Dockerfile
     ports:
-      - "1556:1556" 
+      - "1556:1556"
     environment:
-      DB_HOST: database 
+      DB_HOST: database
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
@@ -32,16 +32,14 @@ services:
       - database
     networks:
       - tesis_network
-    # 🚨 CRÍTICO: Mapeo de volumen para la persistencia de imágenes 
     volumes:
-      # Mapea la carpeta 'uploads' (en la raíz) a la ruta interna del backend.
-      - ./uploads:/app/uploads 
+      - ./uploads:/app/uploads
     restart: always
 
 # REDES Y VOLÚMENES
 networks:
   tesis_network:
-    driver: bridge 
+    driver: bridge
 
 volumes:
   db_data:

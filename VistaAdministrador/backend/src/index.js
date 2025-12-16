@@ -8,7 +8,7 @@ import { dirname, join } from "path";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// ✅ Cargar .env con ruta absoluta robusta (no depende del cwd)
+// ✅ Cargar .env con ruta absoluta robusta
 dotenv.config({ path: join(__dirname, "../.env") });
 
 import cors from "cors";
@@ -17,7 +17,6 @@ import cookieParser from "cookie-parser";
 import session from "express-session";
 import passport from "passport";
 import express, { json, urlencoded } from "express";
-import path from "path";
 
 import { cookieKey, HOST, PORT } from "./config/configEnv.js";
 import { connectDB } from "./config/configDb.js";
@@ -34,16 +33,12 @@ async function setupServer() {
 
     app.disable("x-powered-by");
 
-    // CORS
+    // ✅ CORS MEJORADO (Universal)
+    // Esto permite que funcione en localhost Y en la IP de la U sin cambiar nada
     app.use(
       cors({
         credentials: true,
-        origin: [
-          "http://localhost:5173",
-          "http://localhost:8080",
-          "http://146.83.198.35:1555",
-          "https://146.83.198.35:1556",
-        ],
+        origin: true, // Acepta automáticamente cualquier origen
       })
     );
 
@@ -66,38 +61,29 @@ async function setupServer() {
     // ✅ Servir archivos estáticos de uploads
     app.use("/uploads", express.static(join(__dirname, "../../uploads")));
 
-    // --- 🚨 INICIO: CONFIGURACIÓN PARA SERVIR FRONTENDS ESTÁTICOS (CRÍTICO) 🚨 ---
+    // --- FRONTENDS ESTÁTICOS ---
     
     // 1. Servir Frontend Administrador (URL: /admin)
-    app.use(
-      '/admin', 
-      express.static(join(__dirname, '..', 'public', 'admin'))
-    );
-    // Para el ruteo interno de React (SPA)
+    app.use('/admin', express.static(join(__dirname, '..', 'public', 'admin')));
     app.get('/admin/*', (req, res) => {
       res.sendFile(join(__dirname, '..', 'public', 'admin', 'index.html'));
     });
 
     // 2. Servir Frontend Turista (URL: /turista)
-    app.use(
-      '/turista', 
-      express.static(join(__dirname, '..', 'public', 'turista'))
-    );
-    // Para el ruteo interno de React (SPA)
+    app.use('/turista', express.static(join(__dirname, '..', 'public', 'turista')));
     app.get('/turista/*', (req, res) => {
       res.sendFile(join(__dirname, '..', 'public', 'turista', 'index.html'));
     });
 
-    // --- 🚨 FIN: BLOQUE DE CÓDIGO AÑADIDO (CRÍTICO) 🚨 ---
-
-    // Rutas API
+    // --- 🚨 RUTAS API (RESTAURADAS) 🚨 ---
+    // Volvemos a poner "/api" porque tu Frontend lo necesita para encontrar los datos
     app.use("/api", indexRoutes);
     app.use("/api/patrimonios", patrimonioRoutes);
 
     // DB
     await connectDB();
-    await createUsers();
-    await createPatrimonios();
+    await createUsers(); // Esto recreará al admin si se borró
+    await createPatrimonios(); // Esto recreará patrimonios base si se borraron
 
     // Servidor
     const port = PORT || 4001;
