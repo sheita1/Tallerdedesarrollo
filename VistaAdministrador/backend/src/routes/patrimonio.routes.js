@@ -1,7 +1,7 @@
 "use strict";
 import { Router } from "express";
-// Usar importación nombrada para evitar el ReferenceError
-import { uploader } from "../middlewares/uploadConfig.js"; 
+// Importar uploader, aunque no se use aquí, por si se usa en otra parte
+// import { uploader } from "../middlewares/uploadConfig.js"; 
 import {
   deletePatrimonio,
   getPatrimonio,
@@ -10,7 +10,7 @@ import {
   createPatrimonio,
   getPatrimoniosPublicos,
   getDetallePatrimonio,
-  subirImagenPatrimonio, // Tu función del controller
+  // Ya no importamos subirImagenPatrimonio aquí si no se usa directamente.
 } from "../controllers/patrimonio.controller.js";
 
 const router = Router();
@@ -23,56 +23,20 @@ router
   .delete("/detail", deletePatrimonio)          
   .post("/", createPatrimonio);                 
 
-// Subida de imágenes
-router
-  // 🛑 PUNTOS DE LOGGING AGREGADOS PARA DEBUG 🛑
-  .post("/imagen/:id", uploader.single("imagen"), (req, res, next) => {
-    console.log("📥 [POST] Solicitud de subida de imagen para patrimonio ID:", req.params.id);
-    
-    // 🚩 LOG CRÍTICO 1: ¿Multer recibió el archivo?
-    if (req.file) {
-      console.log(`✅ [ROUTE] Multer SUCCESS. Archivo recibido. Nombre: ${req.file.filename}, Tamaño: ${req.file.size} bytes`);
-      console.log(`🔗 [ROUTE] Path donde Multer lo dejó: ${req.file.path}`);
-    } else {
-      console.log(`❌ [ROUTE] Multer FAILURE. req.file está vacío.`);
-      
-      // Intenta identificar errores comunes de Multer
-      if (req.file === undefined && req.body && Object.keys(req.body).length > 0) {
-        console.log("⚠️ [ROUTE] Cuerpo del request recibido, pero no archivo. Posible error de nombre de campo ('imagen') o límite de tamaño.");
-      }
-    }
-    
-    if (!req.file) {
-      return res.status(400).json({ message: "No se recibió archivo" });
-    }
-    // Si Multer pasó, llama al controller para guardar en DB
-    subirImagenPatrimonio(req, res, next);
-  })
-  // Repetir logs para /imagenes (si lo usas)
-  .post("/imagenes/:id", uploader.single("imagen"), (req, res, next) => {
-    console.log("📥 [POST] Subida de imagen (plural) para patrimonio ID:", req.params.id);
-    if (!req.file) {
-      return res.status(400).json({ message: "No se recibió archivo" });
-    }
-    subirImagenPatrimonio(req, res, next);
-  });
+// 🛑 ¡BLOQUE DE SUBIDA DE IMÁGENES ELIMINADO! 🛑
+/* router
+  .post("/imagen/:id", ... )
+  .post("/imagenes/:id", ... );
+*/
 
-// Nueva ruta: obtener imágenes de un patrimonio
-router.get("/imagenes/patrimonio/:id", async (req, res) => {
-  const { id } = req.params;
-  console.log(`🔍 [GET] Solicitud de lista de imágenes para Patrimonio ID: ${id}`);
-  try {
-    // Aquí debería ir la lógica para obtener la lista de rutas de imagen de la BD
-    return res.json({
-      status: "Success",
-      message: `Imágenes del patrimonio ${id}`,
-      data: [] // reemplaza con tu lógica real
-    });
-  } catch (err) {
-    console.error("💥 [ROUTE] Error al obtener lista de imágenes:", err.message);
-    return res.status(500).json({ message: "Error interno al obtener lista de imágenes", error: err.message });
-  }
+// Nueva ruta: obtener imágenes de un patrimonio (debería estar en imagenes.routes, pero se mantiene si se usa así)
+router.get("/imagenes/patrimonio/:id", (req, res) => {
+  // Esta lógica de obtener lista de imágenes es mejor que vaya a un controlador.
+  // Deberías usar obtenerImagenesPatrimonio si existe.
+  // Si no, tu router principal la interceptará.
+  return res.status(501).json({ message: "La ruta de obtención de lista de imágenes no tiene lógica implementada." });
 });
+
 
 // Rutas públicas
 router
