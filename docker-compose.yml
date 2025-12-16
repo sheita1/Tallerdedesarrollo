@@ -2,33 +2,46 @@ version: '3.8'
 name: tallerdedesarrollo
 
 services:
-  # 1. SERVICIO DE BASE DE DATOS
-  database:
-# ... (Sin cambios)
+  # 1. SERVICIO DE BASE DE DATOS
+  database:
+    image: postgres:14-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data
+    networks:
+      - tesis_network
 
-  # 2. SERVICIO DE APLICACIÓN
-  aplicacion:
-    build:
-      context: .
-      dockerfile: VistaAdministrador/Dockerfile
-    ports:
-      - "1556:1556"
-    environment:
-      DB_HOST: database
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
-      DB_NAME: ${DB_NAME}
-      PORT: 1556
-      # 🚨 NUEVO: Definición de la variable UPLOAD_DIR para el backend
+  # 2. SERVICIO DE APLICACIÓN
+  aplicacion:
+    build:
+      context: .
+      dockerfile: VistaAdministrador/Dockerfile
+    ports:
+      - "1556:1556"
+    environment:
+      DB_HOST: database
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      PORT: 1556
+      # 🚨 CORRECCIÓN CLAVE: La indentación debe coincidir exactamente con las demás variables
       UPLOAD_DIR: /app/uploads
-    depends_on:
-      - database
-    networks:
-      - tesis_network
-    # 🛑 ELIMINACIÓN CLAVE: Ya no mapeamos el volumen externo
-    # volumes:
-    #   - ./uploads:/app/uploads
-    restart: always
+    depends_on:
+      - database
+    networks:
+      - tesis_network
+    # 🛑 ELIMINACIÓN DE VOLUMEN (Instrucción del profesor: Almacenamiento interno)
+    # volumes:
+    #   - ./uploads:/app/uploads
+    restart: always
 
 # REDES Y VOLÚMENES
-# ... (Sin cambios)
+networks:
+  tesis_network:
+    driver: bridge
