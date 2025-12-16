@@ -12,15 +12,20 @@ function GaleriaPatrimonio({ patrimonioId }) {
   // 🚨 CONFIGURACIÓN: Puerto 1556
   const URL_BACKEND = "http://146.83.198.35:1556";
 
+  // 🛑 CORRECCIÓN CRÍTICA AQUÍ 🛑
   // Función para construir la URL correctamente
   const getImagenUrl = (img) => {
-    const nombreArchivo = img.fileName || img.ruta || img.url;
-    if (!nombreArchivo) return "";
+    // Utilizamos la ruta que viene de la DB: /uploads/patrimonios/archivo.png
+    const rutaCompleta = img.ruta || img.url; 
     
-    if (nombreArchivo.startsWith("http")) return nombreArchivo;
+    if (!rutaCompleta) return "";
+    
+    // Si ya es una URL completa (ej. http://example.com/...)
+    if (rutaCompleta.startsWith("http")) return rutaCompleta;
 
-    // 🚨 Usamos la ruta de emergencia del backend
-    return `${URL_BACKEND}/imagen-emergencia/${nombreArchivo}`; 
+    // ✅ SOLUCIÓN: Concatenamos la URL base con la ruta guardada en la DB.
+    // Esto genera: http://146.83.198.35:1556/uploads/patrimonios/archivo.png
+    return `${URL_BACKEND}${rutaCompleta}`; 
   };
 
   // Cargar imágenes
@@ -104,7 +109,6 @@ function GaleriaPatrimonio({ patrimonioId }) {
         <div className="galeria-grid">
           {imagenes.map((img) => (
             <div key={img.id} className="galeria-item">
-              {/* 🚨 Eliminamos el onError para ver el error real del navegador */}
               <img
                 src={getImagenUrl(img)}
                 alt={`Imagen ${img.id}`}
@@ -120,7 +124,6 @@ function GaleriaPatrimonio({ patrimonioId }) {
 
       {imagenAmpliada && (
         <div className="galeria-overlay" onClick={() => setImagenAmpliada(null)}>
-          {/* Eliminamos el onError aquí también */}
           <img
             src={getImagenUrl(imagenAmpliada)}
             alt="Imagen ampliada"
