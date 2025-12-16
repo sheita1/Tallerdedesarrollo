@@ -4,8 +4,8 @@ import dotenv from "dotenv";
 // ✅ ES Modules: definir __dirname y __filename
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
-import fs from "fs"; // Necesario para la ruta de emergencia
-import mime from "mime-types"; // 💡 Nuevo: Para asegurar el tipo MIME
+import fs from "fs"; 
+import mime from "mime-types"; 
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -60,27 +60,28 @@ async function setupServer() {
     passportJwtSetup(passport);
 
     // -----------------------------------------------------------------
-    // 🚨 RUTA MANUAL DE EMERGENCIA (Aseguramos la ruta y el Content-Type) 🚨
+    // 🚨 RUTA MANUAL DE EMERGENCIA (Fuerza la concatenación de la cadena) 🚨
     // -----------------------------------------------------------------
     app.get('/imagen-emergencia/:filename', (req, res) => {
         const filename = req.params.filename;
         
-        // La ruta verificada que funciona dentro del contenedor
-        const filePath = join('/app/uploads/patrimonios', filename); 
+        // ⚠️ CRÍTICO: Concatenación simple de strings (SIN USAR 'join')
+        // Esto elimina el riesgo de que 'path.join' falle al mezclar rutas absolutas.
+        const filePath = '/app/uploads/patrimonios/' + filename; 
 
-        // 💡 Nuevo: Usar fs.existsSync para verificación
+        // 1. Verificación de existencia
         if (!fs.existsSync(filePath)) {
-            console.error(`💥 Error 404: Archivo no encontrado en ${filePath}`);
+            console.error(`💥 ERROR FATAL 404: Archivo no encontrado en ${filePath}`);
             return res.status(404).send("Imagen no encontrada en el disco.");
         }
 
-        // 💡 Nuevo: Forzar el tipo MIME
+        // 2. Forzar el tipo MIME
         const mimeType = mime.lookup(filePath);
         if (mimeType) {
             res.setHeader('Content-Type', mimeType);
         }
 
-        // Usamos res.sendFile para entregar el archivo
+        // 3. Servir el archivo
         res.sendFile(filePath, (err) => {
             if (err) {
                 console.error(`💥 Error al enviar archivo:`, err);
