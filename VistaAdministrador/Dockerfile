@@ -21,12 +21,11 @@ COPY VistaTurista /app
 # Compila (asumiendo que Vite genera la carpeta 'dist')
 RUN npm run build 
 
-# --- ETAPA 3: FINAL - BACKEND Y SERVICIO ---
+# --- ETAPA 3: FINAL - BACKEND Y SERVICIO (CON PERMISOS CORREGIDOS) ---
 FROM node:18-alpine
 WORKDIR /app
 
 # 1. Preparar el Backend
-# RUTA CORREGIDA: Acceso directo desde la Raíz
 COPY VistaAdministrador/backend/package*.json ./
 RUN npm install
 COPY VistaAdministrador/backend .
@@ -35,6 +34,16 @@ COPY VistaAdministrador/backend .
 COPY --from=admin_build /app/dist ./public/admin 
 COPY --from=turista_build /app/dist ./public/turista 
 
-# 3. Puertos y Comando
+# 🚨 CORRECCIÓN CRÍTICA DE PERMISOS PARA EL VOLUMEN 🚨
+# 3. Crear la carpeta /app/uploads si no existe
+RUN mkdir -p /app/uploads
+
+# 4. Asignar la propiedad de /app/uploads al usuario 'node'. (Clave para solucionar el 404)
+RUN chown -R node:node /app/uploads
+
+# 5. Cambiar al usuario no-root 'node' por seguridad y para respetar los permisos
+USER node
+
+# 6. Puertos y Comando
 EXPOSE 1556 
 CMD ["npm", "start"]

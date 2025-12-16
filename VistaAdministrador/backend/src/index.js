@@ -66,7 +66,6 @@ async function setupServer() {
         const filename = req.params.filename;
         
         // ⚠️ CRÍTICO: Concatenación simple de strings (SIN USAR 'join')
-        // Esto elimina el riesgo de que 'path.join' falle al mezclar rutas absolutas.
         const filePath = '/app/uploads/patrimonios/' + filename; 
 
         // 1. Verificación de existencia
