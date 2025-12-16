@@ -9,8 +9,8 @@ function GaleriaPatrimonio({ patrimonioId }) {
   const [archivo, setArchivo] = useState(null);
   const [nombrePatrimonio, setNombrePatrimonio] = useState("");
 
-  // ⚠️ CONFIGURACIÓN: URL directa del backend (IP y Puerto 1555)
-  // Si cambias de servidor, solo actualiza esta línea.
+  // ⚠️ CONFIGURACIÓN: URL directa del backend
+  // Si las imágenes no cargan, prueba agregando "/uploads" al final: "http://146.83.198.35:1555/uploads"
   const URL_BACKEND = "http://146.83.198.35:1555";
 
   // Cargar imágenes
@@ -18,7 +18,9 @@ function GaleriaPatrimonio({ patrimonioId }) {
     instance.get(`/patrimonios/imagenes/patrimonio/${patrimonioId}`)
       .then((res) => {
         const data = res.data;
-        setImagenes(Array.isArray(data) ? data : []);
+        // Si el backend devuelve { data: [...] }, lo manejamos aquí
+        const listaImagenes = data.data || data; 
+        setImagenes(Array.isArray(listaImagenes) ? listaImagenes : []);
         setLoading(false);
       })
       .catch((err) => {
@@ -63,9 +65,11 @@ function GaleriaPatrimonio({ patrimonioId }) {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
-      const respuesta = res.data;
-      // Ajuste por si el backend devuelve un objeto único o un array
-      const nuevas = Array.isArray(respuesta) ? respuesta : [respuesta];
+      // 🔧 CORRECCIÓN: Accedemos a la propiedad 'data' del JSON de respuesta
+      const respuesta = res.data; 
+      const imagenNueva = respuesta.data || respuesta; 
+
+      const nuevas = Array.isArray(imagenNueva) ? imagenNueva : [imagenNueva];
       setImagenes((prev) => [...prev, ...nuevas]);
       setArchivo(null);
     } catch (err) {
@@ -92,11 +96,17 @@ function GaleriaPatrimonio({ patrimonioId }) {
         <div className="galeria-grid">
           {imagenes.map((img) => (
             <div key={img.id} className="galeria-item">
-              {/* CORRECCIÓN: Usamos URL_BACKEND en lugar de /api/ */}
+              {/* 🔧 CORRECCIÓN: Usamos fileName en lugar de ruta */}
               <img
-                src={`${URL_BACKEND}/${img.ruta}`}
+                src={`${URL_BACKEND}/${img.fileName}`}
                 alt={`Imagen ${img.id}`}
                 onClick={() => setImagenAmpliada(img)}
+                onError={(e) => {
+                    // Fallback por si falta la carpeta 'uploads'
+                    if (!e.target.src.includes("/uploads/")) {
+                        e.target.src = `${URL_BACKEND}/uploads/${img.fileName}`;
+                    }
+                }}
               />
               <button onClick={() => handleEliminar(img.id)}>🗑️</button>
             </div>
@@ -108,9 +118,8 @@ function GaleriaPatrimonio({ patrimonioId }) {
 
       {imagenAmpliada && (
         <div className="galeria-overlay" onClick={() => setImagenAmpliada(null)}>
-          {/* CORRECCIÓN: Usamos URL_BACKEND también aquí */}
           <img
-            src={`${URL_BACKEND}/${imagenAmpliada.ruta}`}
+            src={`${URL_BACKEND}/${imagenAmpliada.fileName}`}
             alt="Imagen ampliada"
             className="galeria-ampliada"
           />
