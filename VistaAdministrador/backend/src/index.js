@@ -8,7 +8,7 @@ import { dirname, join } from "path";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// ✅ Cargar .env con ruta absoluta robusta
+// ✅ Cargar .env
 dotenv.config({ path: join(__dirname, "../.env") });
 
 import cors from "cors";
@@ -33,11 +33,11 @@ async function setupServer() {
 
     app.disable("x-powered-by");
 
-    // ✅ CORS MEJORADO (Universal)
+    // ✅ CORS
     app.use(
       cors({
         credentials: true,
-        origin: true, // Acepta automáticamente cualquier origen
+        origin: true,
       })
     );
 
@@ -57,41 +57,34 @@ async function setupServer() {
     app.use(passport.session());
     passportJwtSetup(passport);
 
-    // ✅ Servir archivos estáticos de uploads
-    app.use("/uploads", express.static(join(__dirname, "../../uploads")));
-    
-    // 💡 CORRECCIÓN CRÍTICA: Servir la subcarpeta /uploads/patrimonios
-    // Express ahora buscará en uploads/patrimonios cuando se acceda a /uploads/patrimonios
-    app.use(
-        "/uploads/patrimonios", 
-        express.static(join(__dirname, "../../uploads/patrimonios"))
-    );
+    // -----------------------------------------------------------------
+    // 🚨 CORRECCIÓN DEFINITIVA DE IMÁGENES 🚨
+    // Usamos la ruta ABSOLUTA de Docker (/app/uploads)
+    // Esto conecta la URL "/uploads" directamente al Volumen de Docker.
+    // -----------------------------------------------------------------
+    app.use("/uploads", express.static("/app/uploads"));
 
 
     // --- FRONTENDS ESTÁTICOS ---
-    
-    // 1. Servir Frontend Administrador (URL: /admin)
     app.use('/admin', express.static(join(__dirname, '..', 'public', 'admin')));
     app.get('/admin/*', (req, res) => {
       res.sendFile(join(__dirname, '..', 'public', 'admin', 'index.html'));
     });
 
-    // 2. Servir Frontend Turista (URL: /turista)
     app.use('/turista', express.static(join(__dirname, '..', 'public', 'turista')));
     app.get('/turista/*', (req, res) => {
       res.sendFile(join(__dirname, '..', 'public', 'turista', 'index.html'));
     });
 
-    // --- 🚨 RUTAS API (RESTAURADAS) 🚨 ---
+    // --- RUTAS API ---
     app.use("/api", indexRoutes);
     app.use("/api/patrimonios", patrimonioRoutes);
 
-    // DB
+    // DB e Inicio
     await connectDB();
     await createUsers(); 
     await createPatrimonios(); 
 
-    // Servidor
     const port = PORT || 4001;
     app.listen(port, () => {
       console.log(`🚀 Servidor backend corriendo en ${HOST}:${port}`);
