@@ -53,10 +53,12 @@ async function setupServer() {
     // 🛑 SOLUCIÓN DE LECTURA (MÁXIMA PRIORIDAD)
     // -----------------------------------------------------------------
     
-    // 1. Mapea la URL pública "/uploads" al directorio físico "/app/uploads"
-    // Esto debe ir lo más arriba posible, antes de todas las otras rutas y handlers.
-    app.use('/uploads', express.static('/app/uploads')); 
-    console.log(`🖼️ Servidor de archivos estático configurado: /uploads -> /app/uploads`);
+    // ✅ CORRECCIÓN FINAL: Usar path.join(process.cwd(), 'uploads') para máxima robustez en Docker.
+    const UPLOADS_PATH = path.join(process.cwd(), 'uploads');
+    
+    // 1. Mapea la URL pública "/uploads" al directorio físico /app/uploads
+    app.use('/uploads', express.static(UPLOADS_PATH)); 
+    console.log(`🖼️ Servidor de archivos estático configurado: /uploads -> ${UPLOADS_PATH}`);
 
     // -----------------------------------------------------------------
     // RUTAS DE API Y FRONTEND (VAN DESPUÉS DE LA LECTURA DE ARCHIVOS)
