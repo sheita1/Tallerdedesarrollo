@@ -285,7 +285,8 @@ export async function subirImagenPatrimonio(req, res) {
     // ----------------------------------------------------------------------------------
     // 🛑 CORRECCIONES DE PERSISTENCIA Y GALERÍA 🛑
     // ----------------------------------------------------------------------------------
-    const imagenRepo = AppDataSource.getRepository(PatrimonioImagen);
+    // ✅ CORRECCIÓN FINAL: Usar el nombre de la entidad como cadena para asegurar TypeORM.
+    const imagenRepo = AppDataSource.getRepository("PatrimonioImagen");
 
     // 1. Actualizar la imagen destacada (campo 'imagen')
     const result = await patrimonioRepo.update({ id: patrimonioId }, { imagen: rutaParaDB });
