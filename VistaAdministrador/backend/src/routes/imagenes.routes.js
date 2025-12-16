@@ -7,6 +7,10 @@ import PatrimonioImagen from "../entity/PatrimonioImagen.js";
 
 const router = Router();
 
+// 🚨 Obtener variable de entorno para consistencia
+const UPLOAD_DIR = process.env.UPLOAD_DIR || "/app/uploads"; 
+
+
 /**
  * ✅ Obtener imagen por ID con logs detallados
  */
@@ -32,9 +36,8 @@ router.get("/:id", async (req, res) => {
       patrimonioId: imagen.patrimonioId,
     });
 
-    // 🛑 CORRECCIÓN CRÍTICA: Usamos la ruta ABSOLUTA de Docker y añadimos la subcarpeta 'patrimonios'.
-    // Esto reemplaza a path.join(process.cwd(), "uploads", imagen.ruta)
-    const rutaAbsoluta = path.join("/app/uploads/patrimonios", imagen.ruta); 
+    // 🚨 CORRECCIÓN CLAVE: Usamos la ruta consistente (UPLOAD_DIR + /patrimonios)
+    const rutaAbsoluta = path.join(UPLOAD_DIR, "patrimonios", imagen.ruta); 
     
     console.log("📁 Ruta física que intenta servir (CORREGIDA):", rutaAbsoluta);
 

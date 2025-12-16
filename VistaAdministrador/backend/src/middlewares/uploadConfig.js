@@ -1,59 +1,66 @@
-import multer from "multer";
-import path from "path";
-import fs from "fs";
-// Las importaciones de fileURLToPath y dirname ya no son estrictamente necesarias
-// si usamos rutas absolutas de Docker, pero las dejamos por limpieza.
-import { fileURLToPath } from "url";
-import { dirname } from "path";
+"use strict";
+import { Router } from "express";
+import upload from "../middlewares/uploadConfig.js";
+import {
+  deletePatrimonio,
+  getPatrimonio,
+  getPatrimonios,
+  updatePatrimonio,
+  createPatrimonio,
+  getPatrimoniosPublicos,
+  getDetallePatrimonio,
+  subirImagenPatrimonio,
+} from "../controllers/patrimonio.controller.js";
 
-// Necesario para __dirname en ES Modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+const router = Router();
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    // ⚠️ CORRECCIÓN CRÍTICA: USAR LA RUTA ABSOLUTA DE DOCKER
-    // La ruta en el CONTENEDOR es /app/uploads/patrimonios/
-    const destino = "/app/uploads/patrimonios"; 
-    console.log("📂 [multer] Guardando imagen en:", destino);
+// CRUD principal
+router
+  .get("/", getPatrimonios)                     // GET /api/patrimonios/
+  .get("/detail", getPatrimonio)                // GET /api/patrimonios/detail?id=3
+  .patch("/detail", updatePatrimonio)           // PATCH /api/patrimonios/detail
+  .delete("/detail", deletePatrimonio)          // DELETE /api/patrimonios/detail
+  .post("/", createPatrimonio);                 // POST /api/patrimonios/
 
-    try {
-      // Crear directorio si no existe
-      if (!fs.existsSync(destino)) {
-        fs.mkdirSync(destino, { recursive: true });
-        console.log("🛠️ [multer] Directorio creado:", destino);
-      }
-      cb(null, destino);
-    } catch (err) {
-      console.error("💥 [multer] Error creando directorio:", err);
-      cb(err);
-    }
-  },
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    const name = path.basename(file.originalname, ext)
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "") // elimina acentos
-      .replace(/[^a-zA-Z0-9.\-_() ]/g, "") // elimina caracteres especiales
-      .replace(/\s+/g, "_"); // reemplaza espacios por guiones bajos
+// Subida de imágenes
+router
+  .post("/imagen/:id", upload.single("imagen"), (req, res, next) => {
+    console.log("📥 [POST] Subida de imagen para patrimonio ID:", req.params.id);
+    if (!req.file) {
+      return res.status(400).json({ message: "No se recibió archivo" });
+    }
+    subirImagenPatrimonio(req, res, next);
+  })
+  .post("/imagenes/:id", upload.single("imagen"), (req, res, next) => {
+    console.log("📥 [POST] Subida de imagen (plural) para patrimonio ID:", req.params.id);
+    if (!req.file) {
+      return res.status(400).json({ message: "No se recibió archivo" });
+    }
+    subirImagenPatrimonio(req, res, next);
+  });
 
-    const nombreFinal = `${name}-${Date.now()}${ext}`;
-    console.log("📝 [multer] Nombre final del archivo:", nombreFinal);
-    cb(null, nombreFinal);
-  }
+// Nueva ruta: obtener imágenes de un patrimonio
+router.get("/imagenes/patrimonio/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    // Aquí deberías consultar BD o carpeta uploads
+    // Ejemplo mínimo:
+    // const imagenes = await ImagenModel.findAll({ where: { patrimonioId: id } });
+    // if (!imagenes.length) return res.status(404).json({ message: "No se encontraron imágenes" });
+
+    return res.json({
+      status: "Success",
+      message: `Imágenes del patrimonio ${id}`,
+      data: [] // reemplaza con tu lógica real
+    });
+  } catch (err) {
+    return res.status(500).json({ message: "Error interno", error: err.message });
+  }
 });
 
-const fileFilter = (req, file, cb) => {
-  console.log("🔍 [multer] Tipo de archivo recibido:", file.mimetype);
-  if (file.mimetype === "image/png") {
-    console.log("✅ [multer] Imagen PNG aceptada");
-    cb(null, true);
-  } else {
-    console.log("❌ [multer] Imagen rechazada: solo se permiten PNG");
-    cb(new Error("Solo se permiten imágenes PNG"));
-  }
-};
+// Rutas públicas
+router
+  .get("/public", getPatrimoniosPublicos)       // GET /api/patrimonios/public
+  .get("/detalle", getDetallePatrimonio);       // GET /api/patrimonios/detalle
 
-const upload = multer({ storage, fileFilter });
-
-export default upload;
+export default router;
