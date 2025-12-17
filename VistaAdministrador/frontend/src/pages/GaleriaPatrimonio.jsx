@@ -9,8 +9,9 @@ function GaleriaPatrimonio({ patrimonioId }) {
   const [archivo, setArchivo] = useState(null);
   const [nombrePatrimonio, setNombrePatrimonio] = useState("");
 
-  // ✅ CONFIGURACIÓN IP SERVIDOR PROFESOR (Backend Puerto 1556)
-  const URL_BACKEND = import.meta.env.VITE_PUBLIC_URL || "http://146.83.194.168:1556";
+  // ✅ ÚNICO CAMBIO REALIZADO: IP DEL SERVIDOR (Puerto 1556)
+  // Forzamos la IP del servidor para asegurar que funcione allá.
+  const URL_BACKEND = "http://146.83.194.168:1556";
 
   // ✅ FUNCIÓN PARA ARMAR URL
   const getImagenUrl = (img) => {
@@ -48,7 +49,7 @@ function GaleriaPatrimonio({ patrimonioId }) {
       });
   }, [patrimonioId]);
 
-  // ✅ Cargar nombre
+  // ✅ Cargar nombre del patrimonio
   useEffect(() => {
     instance.get(`/patrimonios/detail/?id=${patrimonioId}`)
       .then((res) => {
@@ -122,7 +123,9 @@ function GaleriaPatrimonio({ patrimonioId }) {
                 src={getImagenUrl(img)}
                 alt={`Imagen ${img.id}`}
                 onClick={() => setImagenAmpliada(img)}
-                onError={(e) => { e.target.src = "/placeholder.png"; }}
+                onError={(e) => {
+                    e.target.src = "/placeholder.png"; 
+                }}
               />
               <button onClick={() => handleEliminar(img.id)} className="btn-eliminar">🗑️</button>
             </div>
