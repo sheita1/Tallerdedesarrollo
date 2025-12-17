@@ -1,138 +1,110 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import Navigation from "../components/Navigation";
-import Footer from "../components/Footer";
-import { getApiBaseUrl } from "../utils/apiBase";
+// Asegúrate de que esta ruta sea correcta en tu proyecto, a veces está en components
+import GaleriaPatrimonio from "../pages/GaleriaPatrimonio"; 
 
-const api = getApiBaseUrl();
-
-// ✅ CONFIGURACIÓN IP SERVIDOR PROFESOR (Backend Puerto 1556)
-const SERVER_URL = import.meta.env.VITE_PUBLIC_URL || "http://146.83.194.168:1556";
-
-// Función auxiliar para armar la URL de la imagen
-const getImageUrl = (ruta) => {
-  if (!ruta) return "/placeholder.png"; 
-  if (ruta.startsWith("http")) return ruta; 
-  return `${SERVER_URL}${ruta}`;
-};
+// ✅ CORRECCIÓN CLAVE: Apuntar explícitamente al Backend (Puerto 1556)
+// Si usamos "/api", intentará buscar en el puerto 1555 y fallará.
+const URL_BACKEND = "http://146.83.194.168:1556";
 
 const registrarEscaneo = async (patrimonioId) => {
+  if (!patrimonioId) {
+    console.warn("⚠️ registrarEscaneo: patrimonioId inválido");
+    return;
+  }
   try {
-    await fetch(`${api}/qr/scan`, {
+    // Usamos URL_BACKEND + /api
+    const res = await fetch(`${URL_BACKEND}/api/qr/scan`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ patrimonioId }),
     });
+    if (!res.ok) {
+      console.warn("⚠️ registrarEscaneo: respuesta no OK", res.status);
+    }
   } catch (error) {
     console.error("Error registrando escaneo QR:", error);
   }
 };
 
-const Comentarios = () => {
-  const [comentarios, setComentarios] = useState([]);
-  const [nuevoComentario, setNuevoComentario] = useState("");
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (nuevoComentario.trim() === "") return;
-    setComentarios([...comentarios, nuevoComentario]);
-    setNuevoComentario("");
-  };
-
-  return (
-    <div className="mt-8">
-      <h2 className="text-2xl font-semibold text-[#2A624C] mb-4">Comentarios</h2>
-      <form onSubmit={handleSubmit} className="flex flex-col space-y-4 mb-6">
-        <textarea
-          value={nuevoComentario}
-          onChange={(e) => setNuevoComentario(e.target.value)}
-          placeholder="Escribe tu opinión sobre este patrimonio..."
-          className="w-full border rounded px-3 py-2 h-24 resize-none"
-        />
-        <button type="submit" className="bg-[#2A624C] text-white px-6 py-2 rounded hover:bg-[#24523f] self-end">
-          Publicar
-        </button>
-      </form>
-      <div className="space-y-4">
-        {comentarios.length === 0 ? (
-          <p className="text-gray-500">Aún no hay comentarios.</p>
-        ) : (
-          comentarios.map((c, i) => (
-            <div key={i} className="bg-gray-100 p-4 rounded shadow-sm border border-gray-200">
-              <p className="text-gray-700">{c}</p>
-            </div>
-          ))
-        )}
-      </div>
-    </div>
-  );
-};
-
-const DetallePatrimonio = () => {
+function DetallePatrimonio() {
   const { id } = useParams();
   const [patrimonio, setPatrimonio] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    document.title = "Detalle de Patrimonio – TourCraft";
+    if (!id) {
+      console.error("⚠️ id no definido en DetallePatrimonio (useParams)");
+      setLoading(false);
+      return;
+    }
+
     registrarEscaneo(id);
-    fetch(`${api}/patrimonios/detalle?id=${id}`)
-      .then((res) => res.json())
-      .then((json) => {
-        if (json.data) setPatrimonio(json.data);
-        else setPatrimonio(null);
+
+    const fetchDetalle = async () => {
+      try {
+        // ✅ Petición al puerto 1556
+        const res = await fetch(`${URL_BACKEND}/api/patrimonios/detail/?id=${id}`);
+        const data = await res.json();
+        setPatrimonio(data.data || data);
+      } catch (err) {
+        console.error("Error al cargar patrimonio:", err);
+      } finally {
         setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Error cargando patrimonio:", err);
-        setLoading(false);
-      });
+      }
+    };
+
+    fetchDetalle();
   }, [id]);
 
-  if (loading) return <p className="text-center mt-20">Cargando patrimonio...</p>;
-  if (!patrimonio) return <p className="text-center mt-20">Patrimonio no encontrado.</p>;
+  if (loading) return <p>Cargando patrimonio...</p>;
+
+  const patrimonioData = patrimonio?.data || patrimonio;
+  if (!patrimonioData || !patrimonioData.nombre)
+    return <p>No se encontró el patrimonio.</p>;
+
+  // ✅ Construcción segura de la imagen principal
+  let imagenSrc = null;
+
+  if (patrimonioData?.imagen) {
+    if (patrimonioData.imagen.startsWith("http")) {
+      imagenSrc = patrimonioData.imagen;
+    } else {
+      // ✅ Usamos la URL del Backend (1556) para las imágenes
+      imagenSrc = `${URL_BACKEND}${patrimonioData.imagen}`;
+    }
+  } else {
+    console.warn("⚠️ Patrimonio sin imagen principal:", patrimonioData);
+  }
 
   return (
-    <div className="min-h-screen overflow-hidden">
-      <Navigation />
-      <main className="container mx-auto px-4 pt-28 pb-16">
-        <h1 className="text-4xl font-bold text-[#2A624C] mb-6">{patrimonio.nombre}</h1>
+    <div style={{ padding: "2rem", fontFamily: "sans-serif" }}>
+      <h2>{patrimonioData.nombre}</h2>
+      <p><strong>Ubicación:</strong> {patrimonioData.ubicacion}</p>
+      <p><strong>Tipo:</strong> {patrimonioData.tipo}</p>
+      <p><strong>Descripción:</strong> {patrimonioData.descripcion}</p>
 
-        {patrimonio.galeria && patrimonio.galeria.length > 0 && (
+      <div style={{ marginTop: "2rem" }}>
+        <h3>📷 Imagen registrada:</h3>
+        {imagenSrc ? (
           <img
-            src={getImageUrl(patrimonio.galeria[0])}
-            alt={patrimonio.nombre}
-            className="w-full max-h-[500px] object-cover rounded shadow-md mb-8"
-            onError={(e) => { e.target.src = "/placeholder.png" }}
+            src={imagenSrc}
+            alt="Imagen del patrimonio"
+            style={{ maxWidth: "100%", borderRadius: "4px", marginTop: "1rem" }}
+            onError={(e) => { e.target.src = "/placeholder.png"; }}
           />
+        ) : (
+          <p style={{ color: "#888" }}>No hay imagen registrada.</p>
         )}
+      </div>
 
-        <p className="text-lg text-gray-700 mb-4"><strong>Ubicación:</strong> {patrimonio.ubicacion}</p>
-        <p className="text-lg text-gray-700 mb-4"><strong>Tipo:</strong> {patrimonio.tipo}</p>
-        <p className="text-lg text-gray-700 mb-8"><strong>Descripción:</strong> {patrimonio.descripcion}</p>
-
-        <Comentarios />
-
-        {patrimonio.galeria && patrimonio.galeria.length > 0 && (
-          <div className="mt-12">
-            <h2 className="text-2xl font-semibold text-[#2A624C] mb-4">Galería</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {patrimonio.galeria.map((ruta, index) => (
-                <img
-                  key={index}
-                  src={getImageUrl(ruta)}
-                  alt={`Imagen ${index + 1}`}
-                  className="w-full h-64 md:h-80 lg:h-96 object-contain rounded shadow-sm"
-                  onError={(e) => { e.target.src = "/placeholder.png" }}
-                />
-              ))}
-            </div>
-          </div>
-        )}
-      </main>
-      <Footer />
+      <div style={{ marginTop: "3rem" }}>
+        {/* Pasamos la URL del backend como prop si GaleriaPatrimonio la necesita, 
+            aunque tu GaleriaPatrimonio ya tiene la IP configurada internamente */}
+        <GaleriaPatrimonio patrimonioId={id} />
+      </div>
     </div>
   );
-};
+}
 
 export default DetallePatrimonio;
