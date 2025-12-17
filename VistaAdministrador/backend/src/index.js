@@ -1,18 +1,17 @@
 "use strict";
 import dotenv from "dotenv";
 
-// ✅ ES Modules: definir __dirname y __filename
+// ✅ Cargar variables de entorno desde Docker (NO desde ../.env)
+dotenv.config();
+
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
-import fs from "fs"; 
-import mime from "mime-types"; 
-import path from "path"; 
+import fs from "fs";
+import mime from "mime-types";
+import path from "path";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-
-// ✅ Cargar .env
-dotenv.config({ path: join(__dirname, "../.env") });
 
 import cors from "cors";
 import morgan from "morgan";
@@ -31,79 +30,76 @@ import indexRoutes from "./routes/index.routes.js";
 import patrimonioRoutes from "./routes/patrimonio.routes.js";
 
 async function setupServer() {
-  try {
-    const app = express();
+  try {
+    const app = express();
 
-    app.disable("x-powered-by");
+    app.disable("x-powered-by");
 
-    // ✅ CORS y Middlewares básicos
-    app.use(cors({ credentials: true, origin: true, }));
-    app.use(morgan("dev"));
-    app.use(json());
-    app.use(urlencoded({ extended: false }));
-    app.use(cookieParser(cookieKey));
-    app.use(
-      session({ secret: cookieKey, resave: false, saveUninitialized: false, })
-    );
-    app.use(passport.initialize());
-    app.use(passport.session());
-    passportJwtSetup(passport);
+    // ✅ Middlewares básicos
+    app.use(cors({ credentials: true, origin: true }));
+    app.use(morgan("dev"));
+    app.use(json());
+    app.use(urlencoded({ extended: false }));
+    app.use(cookieParser(cookieKey));
+    app.use(
+      session({ secret: cookieKey, resave: false, saveUninitialized: false })
+    );
+    app.use(passport.initialize());
+    app.use(passport.session());
+    passportJwtSetup(passport);
 
-    // -----------------------------------------------------------------
-    // 🛑 SOLUCIÓN DE LECTURA (MÁXIMA PRIORIDAD)
-    // -----------------------------------------------------------------
-    
-    // ✅ CORRECCIÓN FINAL: Usar path.join(process.cwd(), 'uploads') para máxima robustez en Docker.
-    const UPLOADS_PATH = path.join(process.cwd(), 'uploads');
-    
-    // 1. Mapea la URL pública "/uploads" al directorio físico /app/uploads
-    app.use('/uploads', express.static(UPLOADS_PATH)); 
-    console.log(`🖼️ Servidor de archivos estático configurado: /uploads -> ${UPLOADS_PATH}`);
+    // -----------------------------------------------------------------
+    // ✅ ✅ ✅ SERVIDOR DE ARCHIVOS /UPLOADS (CORRECCIÓN FINAL)
+    // -----------------------------------------------------------------
 
-    // -----------------------------------------------------------------
-    // RUTAS DE API Y FRONTEND (VAN DESPUÉS DE LA LECTURA DE ARCHIVOS)
-    // -----------------------------------------------------------------
-    
-    // --- RUTAS API ---
-    app.use("/api", indexRoutes);
-    app.use("/api/patrimonios", patrimonioRoutes);
+    // ✅ Ruta REAL dentro del contenedor Docker
+    const UPLOADS_PATH = "/app/uploads";
 
-    // --- FRONTENDS ESTÁTICOS ---
-    app.use('/admin', express.static(join(__dirname, '..', 'public', 'admin')));
-    app.get('/admin/*', (req, res) => {
-      res.sendFile(join(__dirname, '..', 'public', 'admin', 'index.html'));
-    });
+    // ✅ Servir archivos estáticos desde /app/uploads
+    app.use("/uploads", express.static(UPLOADS_PATH));
 
-    app.use('/turista', express.static(join(__dirname, '..', 'public', 'turista')));
-    app.get('/turista/*', (req, res) => {
-      res.sendFile(join(__dirname, '..', 'public', 'turista', 'index.html'));
-    });
+    console.log(`🖼️ Servidor de archivos estático configurado: /uploads -> ${UPLOADS_PATH}`);
 
-    // -----------------------------------------------------------------
-    // 🛑 MANEJADOR DE ERRORES 404 (COMENTADO PARA LA PRUEBA FINAL) 🛑
-    // -----------------------------------------------------------------
-    
-    // Comentamos este bloque. Si la imagen funciona, este era el culpable.
-    /*
-    app.use((req, res) => {
-      console.log(`⚠️ 404: Ruta no encontrada: ${req.method} ${req.url}`);
-      res.status(404).send("Ruta de API/Uploads/Assets no encontrada"); 
-    });
-    */
-    
-    // DB e Inicio
-    await connectDB();
-    await createUsers(); 
-    await createPatrimonios(); 
+    // -----------------------------------------------------------------
+    // ✅ RUTAS DE API
+    // -----------------------------------------------------------------
 
-    const port = PORT || 4001;
-    app.listen(port, () => {
-      console.log(`🚀 Servidor backend corriendo en ${HOST}:${port}`);
-    });
-  } catch (error) {
-    console.error("❌ Error al iniciar el servidor:", error);
-    process.exit(1);
-  }
+    app.use("/api", indexRoutes);
+    app.use("/api/patrimonios", patrimonioRoutes);
+
+    // -----------------------------------------------------------------
+    // ✅ FRONTENDS ESTÁTICOS
+    // -----------------------------------------------------------------
+
+    app.use('/admin', express.static(join(__dirname, '..', 'public', 'admin')));
+    app.get('/admin/*', (req, res) => {
+      res.sendFile(join(__dirname, '..', 'public', 'admin', 'index.html'));
+    });
+
+    app.use('/turista', express.static(join(__dirname, '..', 'public', 'turista')));
+    app.get('/turista/*', (req, res) => {
+      res.sendFile(join(__dirname, '..', 'public', 'turista', 'index.html'));
+    });
+
+    // -----------------------------------------------------------------
+    // ✅ INICIO DE SERVIDOR Y BASE DE DATOS
+    // -----------------------------------------------------------------
+
+    await connectDB();
+    await createUsers();
+    await createPatrimonios();
+
+    const port = PORT || 4001;
+
+    // ✅ Escuchar en 0.0.0.0 para que Docker exponga el puerto
+    app.listen(port, "0.0.0.0", () => {
+      console.log(`🚀 Servidor backend corriendo en ${HOST}:${port}`);
+    });
+
+  } catch (error) {
+    console.error("❌ Error al iniciar el servidor:", error);
+    process.exit(1);
+  }
 }
 
 setupServer();

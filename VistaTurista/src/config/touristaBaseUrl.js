@@ -1,17 +1,11 @@
-// VistaTurista/src/utils/touristaBaseUrl.js - CÓDIGO FINAL
-
 let TOURISTA_BASE_URL;
 
-
-if (import.meta.env.DEV) {
-  // En desarrollo, usamos la URL de Vite
-  TOURISTA_BASE_URL = window.location.origin;
-}
-
-
-else {
-  // 🚨 CORRECCIÓN: Usamos la URL de origen del servidor Express (http://[IP_SERVIDOR]:1556)
-  TOURISTA_BASE_URL = window.location.origin;
+if (process.env.NODE_ENV === "production") {
+  // ✅ Servidor del Profesor (Puerto del Frontend Turista 1555)
+  TOURISTA_BASE_URL = "http://146.83.194.168:1555";
+} else {
+  // Desarrollo / Fallback
+  TOURISTA_BASE_URL = "http://localhost:1555";
 }
 
 export { TOURISTA_BASE_URL };
